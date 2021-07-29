@@ -26,7 +26,7 @@ R
 - library(permutes)
 
 ## Raw data
-raw data can be found at **'[Python]PreProcessing/Exp1/results'**
+raw data can be found at **'[Python]PreProcessing/results'**
 
 ## Pre-processing
 - Raw data (.asc) are pre-processed by **'[Python]PreProcessing/parseData.py'**
