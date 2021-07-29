@@ -1,0 +1,192 @@
+##### Figure 3 #####
+#### file loading #### 
+# countFigNum = 1 
+# load("data/dataset.rda")
+# go1 <- c("Center","Upper","Lower","Left","Right")
+# data_e1$Locs = factor(data_e1$Locs, go1)
+# 
+# numOfSub = length(unique(data_e1$sub))
+# 
+# peakMin = data_e1[data_e1$Locs == 'Center',]
+# peakMin = aggregate( data_y ~ sub*data_x, data = peakMin, FUN = "mean")
+# peakMin = aggregate( data_y ~ data_x, data = peakMin, FUN = "mean")
+# peakMin_ind = peakMin[peakMin$data_y == min(peakMin$data_y),]$data_x
+# 
+# config = list(
+#   alpha = 0.4,
+#   stride = 0.1,
+#   label_x = "",
+#   label_y = "Pupil Changes [z-scored]",
+#   title = ""
+#  )
+# #### Figure 3A #### 
+# data_e1_early = data_e1[data_e1$data_x < peakMin_ind & data_e1$data_x > 0,]
+# # data_e1_early = data_e1[data_e1$data_x > peakMin_ind-0.5 & data_e1$data_x < peakMin_ind+0.5,]
+# data_e1_early = aggregate( data_y ~ sub*Locs*Pattern, data = data_e1_early, FUN = "mean")
+# 
+# diff = data_e1_early[data_e1_early$Pattern == 'Glare',]$data_y - data_e1_early[data_e1_early$Pattern == 'Control',]$data_y 
+# # data_e1_early$data_y = data_e1_early[data_e1_early$Pattern == 'Glare',]$data_y
+# # data_e1_early$data_y = diff
+# # data_e1_early$Pattern = 'early'
+# 
+# pVal=NULL
+# for(iLocs in 1:5){
+#   y1 = data_e1_early[data_e1_early$Locs == go1[iLocs] & data_e1_early$Pattern == 'Glare',]$data_y
+#   y2 = data_e1_early[data_e1_early$Locs == go1[iLocs] & data_e1_early$Pattern == 'Control',]$data_y
+#   model = t.test(y1,y2,paired = TRUE)
+#   pVal = rbind(pVal,model[["p.value"]])
+# }
+# 
+# p <- dispLineGraph(data_e1_early,config,c("Locs","Pattern"))+
+#   facet_grid(. ~ Locs)
+# 
+# config$ylim = round(seq(-0.15,0.15,0.05),2)
+# config$ylim_stride = 0.02
+# config$xlim = round(seq(1,2,1),2)
+# config$xlim_stride = 0.5
+# 
+# p = setEmptyStyle(p,config)
+# 
+# eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
+# countFigNum = countFigNum+1
+# # data_e1_early_anova=data_e1_early
+# data_e1_early_anova = data_e1_early[data_e1_early$Locs != 'Center',]
+# # data_e1_early_anova$Pattern = NULL
+# 
+# #### Figure 3B #### 
+# data_e1_late = data_e1[data_e1$data_x > peakMin_ind,]
+# data_e1_late = aggregate( data_y ~ sub*Locs*Pattern, data = data_e1_late, FUN = "mean")
+# # diff = data_e1_late[data_e1_late$Pattern == 'Glare',]$data_y - data_e1_late[data_e1_late$Pattern == 'Control',]$data_y 
+# # data_e1_late$data_y = data_e1_late[data_e1_late$Pattern == 'Glare',]$data_y
+# # data_e1_late$data_y = diff
+# # data_e1_late$Pattern = 'late'
+# 
+# # data_e1_late = rbind(data_e1_early,data_e1_late)
+# p <- dispLineGraph(data_e1_late,config,c("Locs","Pattern"))+
+#   facet_grid(. ~ Locs)
+# 
+# config$ylim = round(seq(-0.4,0.6,0.2),2)
+# config$ylim_stride = 0.05
+# config$xlim = round(seq(1,2,1),2)
+# config$xlim_stride = 0.5
+# 
+# p = setEmptyStyle(p,config)
+# 
+# eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
+# countFigNum = countFigNum+1
+# 
+# # p <- dispLineGraph(data_e1_late,config,c("Pattern","Locs"))+
+# #   facet_grid(Pattern ~ .)
+# # data_e1_late_anova=data_e1_late
+# data_e1_late_anova = data_e1_late[data_e1_late$Locs != 'Center',]
+# # data_e1_early$comp = 'early'
+# # 
+# # p <- dispLineGraph(data_comp,config,c("Locs","Pattern","comp"))+
+# #   facet_grid(comp ~ Pattern)
+# 
+# anovakun(data_e1_early_anova,"sAB",long=T, peta=T, gg=T)
+# fig3a_anovatable = forDrawingSigANOVA
+# fig3a_ttest = forDrawingPost[["A"]][["bontab"]]
+# fig3a_inter = forDrawingPost[["A:B"]][["simtab"]]
+# 
+# anovakun(data_e1_late_anova,"sAB",long=T, peta=T, gg=T)
+# fig3b_anovatable = forDrawingSigANOVA
+# fig3b_ttest = forDrawingPost[["A"]][["bontab"]]
+# fig3b_inter = forDrawingPost[["A:B"]][["simtab"]]
+
+
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, include=FALSE}
+# data=fromJSON(file="data/events.json")
+# g1 <- c("Upper","Lower","Center","Left","Right","Upper","Lower","Center","Left","Right")
+# g2 <- c("Glare","Glare","Glare","Glare","Glare","Control","Control","Control","Control","Control")
+# ind_data = data.frame(
+#   sub = data$sub,
+#   Locs = g1[data$condition],
+#   Pattern = g2[data$condition],
+#   data_y = c(data$diff_f0,data$diff_f1),
+#   f = rep(c('f0','f1'),times=c(length(data$diff_f0),length(data$diff_f1)))
+# )
+# 
+# f0_anova = ind_data[ind_data$f == 'f1',]
+# f0_anova$f = NULL
+# anovakun(f0_anova,"sAB",long=T, peta=T, gg=T)
+# 
+# 
+# p <- dispLineGraph(ind_data,config,c("Pattern","Locs","f"))+
+#   facet_grid(f ~ Locs)
+
+# data=fromJSON(file="data/dat_loadings.json")
+
+# 
+# ind_data = data.frame(
+#   sub = data$sub,
+#   Locs = g1[data$locs],
+#   Pattern = g2[data$pattern+1],
+#   data_y = data$compornent,
+#   cNum = data$cnum 
+# )
+# # ind_data = ind_data[ind_data$cNum == 1,]
+# 
+# p <- dispLineGraph(ind_data,config,c("Pattern","Locs","cNum"))+
+#   facet_grid(cNum ~ Locs)
+# ind_data$cNum = NULL
+# anovakun(ind_data,"sAB",long=T, peta=T, gg=T)
+
+# # comparison with center
+# countFigNum = 1
+# SIZE_FONT=20
+# CairoFonts(regular = "Times","Times")
+# 
+# #### file loading 
+# load("data/dataset.rda")
+# 
+# data_e1 = data_e1[data_e1$data_x > 0,]
+# # data_e1 = data_e1[data_e1$sub != 10,]
+# 
+# data_e1_ave = aggregate( data_y ~ sub*Locs*Pattern, data = data_e1, FUN = "mean")
+# 
+# diff = exp(data_e1_ave[data_e1_ave$Pattern == "Control" & data_e1_ave$Locs != "Center",]$data_y - data_e1_ave[data_e1_ave$Pattern == "Glare" & data_e1_ave$Locs != "Center",]$data_y)
+# 
+# center =  exp(data_e1_ave[data_e1_ave$Pattern == "Glare" & data_e1_ave$Locs == "Center",]$data_y - data_e1_ave[data_e1_ave$Pattern == "Control" & data_e1_ave$Locs == "Center",]$data_y)
+# 
+# data_e1_ave = data_e1_ave[data_e1_ave$Pattern == "Glare" & data_e1_ave$Locs != "Center",]
+# # data_e1_ave$diff = diff
+# data_e1_ave$data_y = diff / center
+# data_e1_ave$Pattern = NULL
+# # data_e1_ave$center = center 
+# 
+# # data_e1_ave_high = data_e1_ave[data_e1_ave$center > mean(center), ]
+# # 
+# # p <- dispLineGraph(data_e1_ave_high,config,c("Locs"))
+# # print(p)
+# anovakun(data_e1_ave,"sA",long=T, peta=T,gg=T)
+# 
+# # data_e1_ave$center = center
+# # data_e1_ave$sub = subName[data_e1_ave$sub]
+# # p = ggplot(data_e1_ave,aes(x = center,y = diff,group = Locs,color=sub))+
+# #   geom_point(aes(shape=Locs),size=4)
+# 
+# # model = lmer( center ~ diff+(1+diff|Locs),data_e1_ave)
+# # summary(model)
+# 
+# # facet_grid(. ~ Locs)
+# 
+# # data_e1_ave = aggregate( . ~ Locs*Pattern, data = data_e1_ave, FUN = "mean")
+# 
+# # data_e1_ave$data_y = data_e1_ave$center / data_e1_ave$data_y
+# # mean(data_e1_ave[data_e1_ave$Locs == 'Top',]$data_y)
+# 
+# data_e1_ave$Pattern = NULL
+# 
+# config = list(alpha = 0.4,
+#               stride = 0.1,
+#               label_x = "Time [sec]",
+#               label_y = "Pupil Change[%]",
+#               title = "",
+#               linetype = TRUE
+# )
+# p <- dispLineGraph(data_e1_ave,config,c("Locs"))
+# print(p)
+
+```
