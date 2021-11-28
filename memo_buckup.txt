@@ -1,0 +1,22 @@
+
+<!-- ## Results -->
+<!-- We presented a stimulus (glare or control stimuli) in four visual positions (i.e., upper, lower, left, and right). As shown in Fig.3, the pupillary trace demonstrated a prominent constriction approximately after 500 ms of stimulus onset (PLR), which was in response to the visual stimulus (glare illusion or control stimuli) presentation on the gray background __(Bombeke et al., 2016; Laeng et al., 2018; Laeng & Endestad, 2012; Zavagno et al., 2017)__. After reaching the PLR amplitude peak, the pupil gradually dilates, reflecting cognitive factors, including perceptual brightness of the stimuli. Fig. 3a portrays pupil size changes from stimulus onset to offset across all observers in each visual field.  -->
+
+<!-- ### The stimulus-evoked pupillary responses in glare illusion and control pattern -->
+<!-- We calculated the average pupil diameter change during the presentation of stimuli in each pattern and visual position, as displayed in Fig. 3B. Two-way repeated measures ANOVAs on the average pupil change performed in each pattern and visual position. There was a significant main effect of visual position  -->
+<!-- ($F$(`r round(fig2a_anovatable[2,]['df.col'],3)`, `r round(fig2a_anovatable[3,]['df.col'],3)`) = `r round(fig2a_anovatable[2,]['f.col'],3)`, p = `r round(fig2a_anovatable[2,]['p.col'],3)`, $\eta^2_p$ =  `r round(fig2a_anovatable[2,]['p.eta^2'],3)`). -->
+<!-- Post-hoc comparisons demonstrated significant differences between upper-lower, -left, and -right positions  -->
+<!-- (t(`r round(fig2a_ttest[1,]['df'],3)`) = `r round(fig2a_ttest[1,]['t'],3)`,p = `r round(fig2a_ttest[1,]['adj.p'],3)`, Cohen’s  $d$ = `r fig2a_cohend[1]`, $BF_{10}$ =  `r fig2a_bf[1]`, -->
+<!-- t(`r round(fig2a_ttest[2,]['df'],3)`) = `r round(fig2a_ttest[2,]['t'],3)`,p =  `r round(fig2a_ttest[2,]['adj.p'],3)`, Cohen’s  $d$ = `r fig2a_cohend[2]`, $BF_{10}$ =  `r fig2a_bf[2]`,  -->
+<!-- t(`r round(fig2a_ttest[3,]['df'],3)`) = `r round(fig2a_ttest[3,]['t'],3)`,p =  `r round(fig2a_ttest[3,]['adj.p'],3)`, Cohen’s  $d$ = `r fig2a_cohend[3]`, $BF_{10}$ =  `r fig2a_bf[3]` respectively),  -->
+<!-- indicating that the UVF produces larger pupil dilation than the other visual field regardless of the stimulus pattern, in line with the previous studies __(Hong et al., 2001; Sabeti et al., 2011; Tan et al., 2001; Wilhelm et al., 2000)__.  -->
+<!-- The main effect of the pattern and the interaction between pattern and visual position were not significant  -->
+<!-- ($F$(`r round(fig2a_anovatable[4,]['df.col'],3)`, `r round(fig2a_anovatable[5,]['df.col'],3)`) = `r round(fig2a_anovatable[4,]['f.col'],3)`, p = `r round(fig2a_anovatable[4,]['p.col'],3)`, $\eta^2_p$ =  `r round(fig2a_anovatable[4,]['p.eta^2'],3)`, -->
+<!-- $F$(`r round(fig2a_anovatable[6,]['df.col'],3)`, `r round(fig2a_anovatable[7,]['df.col'],3)`) = `r round(fig2a_anovatable[6,]['f.col'],3)`, p = `r round(fig2a_anovatable[6,]['p.col'],3)`, $\eta^2_p$ =  `r round(fig2a_anovatable[6,]['p.eta^2'],3)`, respectively).  -->
+<!-- Following multiple comparisons showed that the differences of pupil response between glare and control stimuli in the upper position had significant effect with medium effect of Cohen’s d  -->
+<!-- (t(`r round(fig2a_inter[6,]['df.col'],3)`) = `r round(fig2a_inter[5,]['f.col'],3)`,p = `r round(fig2a_inter[5,]['p.col'],3)`, Cohen’s  $d$ = `r fig2c_cohend[1]`, $BF_{10}$ =  `r fig2c_bf[1]`). -->
+<!-- However, the differences between pattern in the lower, left, and right positions had no significant effects with small effects of Cohen’s d  -->
+<!-- (t(`r round(fig2a_inter[8,]['df.col'],3)`) = `r round(fig2a_inter[7,]['f.col'],3)`,p = `r round(fig2a_inter[7,]['p.col'],3)`, Cohen’s  $d$ = `r fig2c_cohend[2]`, $BF_{10}$ =  `r fig2c_bf[2]`, -->
+<!-- t(`r round(fig2a_inter[10,]['df.col'],3)`) = `r round(fig2a_inter[9,]['f.col'],3)`,p = `r round(fig2a_inter[9,]['p.col'],3)`, Cohen’s  $d$ = `r fig2c_cohend[3]`, $BF_{10}$ =  `r fig2c_bf[3]`, -->
+<!-- t(`r round(fig2a_inter[12,]['df.col'],3)`) = `r round(fig2a_inter[11,]['f.col'],3)`,p = `r round(fig2a_inter[11,]['p.col'],3)`, Cohen’s  $d$ = `r fig2c_cohend[4]`, $BF_{10}$ =  `r fig2c_bf[4]`, respectively). -->
+

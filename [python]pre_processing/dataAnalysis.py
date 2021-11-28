@@ -100,11 +100,11 @@ P = (tmp_x/a)+(tmp_y/b)-1
 
 rejectGaze = np.argwhere(P > 0).reshape(-1)
     
-fig = plt.figure()
-plt.plot(gazeX,gazeY,'.')
-ax = plt.axes()
-e = patches.Ellipse(xy=(0,0), width=rangeWin*2, height=rangeWin*2, fill=False, ec='r')
-ax.add_patch(e)
+# fig = plt.figure()
+# plt.plot(gazeX,gazeY,'.')
+# ax = plt.axes()
+# e = patches.Ellipse(xy=(0,0), width=rangeWin*2, height=rangeWin*2, fill=False, ec='r')
+# ax.add_patch(e)
 
 y = np.delete(y,rejectGaze,axis=0)
 for mm in mmName:
@@ -144,72 +144,139 @@ rejectedTrial = [d for i,d in enumerate(rejectedTrial) if not i+1 in reject]
 ave = np.array(rejectedTrial)/NUM_TRIAL
 print('rejected num ave = ' + str(round(np.mean(ave),3)) + ', sd = ' + str(round(np.std(ave),3)))
 
+
 ########################################################################
-fs = 200
-test_y = moving_avg(y.copy(),fs)
-# test_y = y.copy()
-events = {'sub':[],'condition':[],
-          # 'indices':[],'event':[],
-          'diff_f0':[],'diff_f1':[]}
-plt.figure(figsize=(10,10))
+events = {'sub':[],
+          'condition':[],
+          'PDR':[],
+          'min':[],
+          'ave':[]
+          }
+
 for iSub in np.unique(dat['sub']):
     for iCond in np.unique(dat['condition']):
         
         ind = np.argwhere((dat['sub'] == iSub ) &
                           (dat['condition'] == np.int64(iCond) )).reshape(-1)
-        tmp_y = test_y[ind,:].mean(axis=0)
+        tmp_y = y[ind,:].mean(axis=0)
         
-        pv = np.gradient(tmp_y)
+       
+        events['sub'].append(iSub)
+        events['condition'].append(iCond)
+        events['PDR'].append(tmp_y.tolist())
+        
+    # events['min'].append(float(x[np.argwhere(tmp_y == np.min(tmp_y[ np.argwhere(x>0)]))]))
+
+plt.figure()
+
+time_min = 0.2
+time_max = 4
+dat['min'] = []
+
+x_t = x[np.argwhere((x>time_min) & (x<time_max))]
+for iSub in np.unique(dat['sub']):
+     ind = np.argwhere((events['sub'] == iSub)).reshape(-1)
+     
+     tmp_p = np.array(events['PDR'])[ind].mean(axis=0)
+     tmp_p = tmp_p[np.argwhere(((x>time_min) & (x<time_max)))]
+     
+     # plt.subplot(5,4,iSub)
+     plt.plot(x_t,tmp_p)
+     
+     t = tmp_p.reshape(-1)
+     pv = np.gradient(t)
     
-        indices = np.where(np.diff(np.sign(pv)))[0]
-        xv = np.gradient(indices)
+     indices = np.where(np.diff(np.sign(pv)))[0]
+     xv = np.gradient(indices)
     
-        indices = indices[xv > 100] # < 300ms
+     indices = indices[xv > 50]
+     
+     ev = []
+     for itr in np.arange(len(indices)):
+         if pv[indices[itr]] - pv[indices[itr]+1] > 0:
+             ev.append(1)
+         else:
+             ev.append(0)
+             
+     indices = indices[np.argwhere(np.array(ev) == 0).reshape(-1)]
+    
+     indices = indices[0]
+     
+     plt.plot(x_t[indices],tmp_p[indices],'ro')  
+     dat['min'].append(float(x_t[indices]))
+      
+
+     # ind = np.argwhere(np.array(dat['sub']) == iSub).reshape(-1)
+     # tmp_y = y[ind,indices:]
+     # dat['late'] = []
         
-        ev = []
-        for itr in np.arange(len(indices)):
-            if pv[indices[itr]] - pv[indices[itr]+1] > 0:
-                ev.append(1)
-            else:
-                ev.append(0)
-        ev = np.array(ev)
-        ev = ev[indices > 600]
-        indices = indices[indices > 600]
+########################################################################
+# fs = 100
+# test_y = moving_avg(y.copy(),fs)
+# # test_y = y.copy()
+# events = {'sub':[],'condition':[],
+#           # 'indices':[],'event':[],
+#           'diff_f0':[],'diff_f1':[]}
+
+# plt.figure(figsize=(10,10))
+# for iSub in np.unique(dat['sub']):
+#     for iCond in np.unique(dat['condition']):
         
-        if len(indices) > 2:
+#         ind = np.argwhere((dat['sub'] == iSub ) &
+#                           (dat['condition'] == np.int64(iCond) )).reshape(-1)
+#         tmp_y = test_y[ind,:].mean(axis=0)
+        
+#         pv = np.gradient(tmp_y)
+    
+#         indices = np.where(np.diff(np.sign(pv)))[0]
+#         xv = np.gradient(indices)
+    
+#         indices = indices[xv > 50] # < 300ms
+        
+#         ev = []
+#         for itr in np.arange(len(indices)):
+#             if pv[indices[itr]] - pv[indices[itr]+1] > 0:
+#                 ev.append(1)
+#             else:
+#                 ev.append(0)
+#         ev = np.array(ev)
+#         ev = ev[indices > 200]
+#         indices = indices[indices > 200]
+        
+#         if len(indices) > 2:
                   
-            f1 = indices[ev==1]
-            ev = ev[indices >= f1[0]]
-            indices = indices[indices >= f1[0]]
+#             f1 = indices[ev==1]
+#             ev = ev[indices >= f1[0]]
+#             indices = indices[indices >= f1[0]]
         
-            if len(indices) > 2:
-                events['sub'].append(int(iSub))
-                events['condition'].append(int(iCond))
-                events['diff_f0'].append((tmp_y[indices[1]] - tmp_y[indices[0]]))
-                events['diff_f1'].append((tmp_y[indices[2]] - tmp_y[indices[1]]))
+#             if len(indices) > 2:
+#                 events['sub'].append(int(iSub))
+#                 events['condition'].append(int(iCond))
+#                 events['diff_f0'].append((tmp_y[indices[1]] - tmp_y[indices[0]]))
+#                 events['diff_f1'].append((tmp_y[indices[2]] - tmp_y[indices[1]]))
             
-            # events['indices'].append(indices.tolist())        
-            # events['event'].append(ev.tolist())  
-        # if iSub == 2:
-            plt.subplot(5, 5,iSub)
-            plt.plot(tmp_y)
-            plt.plot(indices[:2],tmp_y[indices[:2]],'ro')    
-            plt.xlim([400,2500])
-            # plt.ylim([-0.2,0.2])
+#             # events['indices'].append(indices.tolist())        
+#             # events['event'].append(ev.tolist())  
+#         # if iSub == 2:
+#             plt.subplot(5, 5,iSub)
+#             plt.plot(tmp_y)
+#             plt.plot(indices[:2],tmp_y[indices[:2]],'ro')    
+#             plt.xlim([400,2500])
+#             # plt.ylim([-0.2,0.2])
 
-df = pd.DataFrame.from_dict(events, orient='index').T
-name_loc = ['Upper','Lower','Center','Left','Right',
-            'Upper','Lower','Center','Left','Right']
-name_pat = ['Glare','Glare','Glare','Glare','Glare',
-            'Control','Control','Control','Control','Control']
-df['locs'] = np.array(name_loc)[np.int64(df['condition'].values-1)]
-df['pattern'] = np.array(name_pat)[np.int64(df['condition'].values-1)]
+# df = pd.DataFrame.from_dict(events, orient='index').T
+# name_loc = ['Upper','Lower','Center','Left','Right',
+#             'Upper','Lower','Center','Left','Right']
+# name_pat = ['Glare','Glare','Glare','Glare','Glare',
+#             'Control','Control','Control','Control','Control']
+# df['locs'] = np.array(name_loc)[np.int64(df['condition'].values-1)]
+# df['pattern'] = np.array(name_pat)[np.int64(df['condition'].values-1)]
 
-df = df.groupby(['locs','pattern']).mean()
+# df = df.groupby(['locs','pattern']).mean()
 # a = a.sort_values(['locs'])
 
-df.plot.bar(y=['diff_f0'], alpha=0.6, figsize=(12,3))
-df.plot.bar(y=['diff_f1'], alpha=0.6, figsize=(12,3))
+# df.plot.bar(y=['diff_f0'], alpha=0.6, figsize=(12,3))
+# df.plot.bar(y=['diff_f1'], alpha=0.6, figsize=(12,3))
 
 # with open(os.path.join("./data/events.json"),"w") as f:
 #     json.dump(events,f)   
