@@ -24,11 +24,11 @@ cfg={
 'FLAG_LOWPASS':False
 }
 
-saveFileLocs = '../data/'
+saveFileLocs = './data/'
 
 cfg['THRES_DIFF'] = 0.04 if cfg['METHOD'] == 1 else 0.1 ## mm
 
-f = open(os.path.join(str('./data_original.json')))
+f = open(os.path.join(str('./data/data_original.json')))
 dat = json.load(f)
 f.close()
 
@@ -123,11 +123,19 @@ for iSub in np.arange(1,int(max(dat['sub']))+1):
     rejectedTrial.append(NUM_TRIAL - len(ind))
     if numOftrials[iSub-1] < NUM_TRIAL * 0.6:
             reject.append(iSub)
+            
 print('# of trials = ' + str(numOftrials))
+print('Averaged # of trials = ' + str(np.round(np.mean(numOftrials),2)))
+print('SD # of trials = ' + str(np.round(np.std(numOftrials),2)))
+
+# th = NUM_TRIAL - 3*np.round(np.std(numOftrials),2)
+# for iSub in np.arange(1,int(max(dat['sub']))+1):
+#     if numOftrials[iSub-1] < th:
+#         reject.append(iSub)
 
 rejectSub = [i for i,d in enumerate(dat['sub']) if d in reject]
 print('rejected subject = ' + str(reject))
-y = np.delete(y,rejectSub,axis=0)  
+y = np.delete(y,rejectSub,axis=0)
 for mm in mmName:
     dat[mm] = [d for i,d in enumerate(dat[mm]) if not i in rejectSub]
 
@@ -183,7 +191,7 @@ for iSub in np.unique(dat['sub']):
             # events['indices'].append(indices.tolist())        
             # events['event'].append(ev.tolist())  
         # if iSub == 2:
-            plt.subplot(4, 5,iSub)
+            plt.subplot(5, 5,iSub)
             plt.plot(tmp_y)
             plt.plot(indices[:2],tmp_y[indices[:2]],'ro')    
             plt.xlim([400,2500])
@@ -203,7 +211,7 @@ df = df.groupby(['locs','pattern']).mean()
 df.plot.bar(y=['diff_f0'], alpha=0.6, figsize=(12,3))
 df.plot.bar(y=['diff_f1'], alpha=0.6, figsize=(12,3))
 
-# with open(os.path.join("../data/events.json"),"w") as f:
+# with open(os.path.join("./data/events.json"),"w") as f:
 #     json.dump(events,f)   
     
 ## ################## figure plot ##########################
@@ -223,13 +231,14 @@ df.plot.bar(y=['diff_f1'], alpha=0.6, figsize=(12,3))
 #             plt.subplot(1,5,cond-5)
 #         ind = np.argwhere((np.array(dat['condition']) == cond)).reshape(-1)
 #         plt.plot(x,np.mean(y[ind,],axis=0),label=conditionName[cond-1])
-        
-        
 #         # plt.plot(x,y[ind,].T,alpha=0.2)
                  
-# plt.legend(loc='lower right') 
+# plt.legend(loc='lower right')
 
-# del dat['numOfTrial'], dat['numOfBlink'],dat['numOfSaccade'],dat['ampOfSaccade']
+del dat['gazeX'], dat['gazeY']
+del dat['numOfTrial'], dat['numOfBlink'],dat['numOfSaccade'],dat['ampOfSaccade']
 
-# with open(os.path.join("../data/data2.json"),"w") as f:
-#         json.dump(dat,f)   
+with open(os.path.join("./data/data20211124.json"),"w") as f:
+        json.dump(dat,f)
+        
+        

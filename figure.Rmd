@@ -25,34 +25,32 @@ Novera Istiqomah, Yuta Suzuki, Yuya Kinzuka, Minami Tetsuto, Shigeki Nakauchi
 
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, include=FALSE}
-#### #### #### #### generate dataset file #### #### #### ####
-# sTime = -1
-# eTime = 4
-# timeLen = c(sTime,eTime)
-# nameOfVar = c("condition","condition")
-# f1 = "Locs"
-# f2 = "Pattern"
-# 
-# g1 <- rep(c("Upper","Lower","Center","Left","Right"),2)
-# g2 <- rep(c("Glare","Control"),times=c(5,5))
-# 
-# go1 <- c("Upper","Lower","Center","Left","Right")
-# go2 <- c("Glare","Control")
-# 
-# # #### making dataset for e1 #################################
-# data=fromJSON(file="data/data2.json")
-# dat <- list((matrix(unlist(data$PDR),nrow=length(data$PDR),byrow=T)),
-#             t(unlist(data$sub)),
-#             t(unlist(data$condition)))
-# names(dat) <- c('y', 'sub', 'condition')
-# 
-# ind_data = makePupilDataset_mat2long(dat,c('condition','condition'),timeLen,list(g1,g2),list(go1,go2),c(f1,f2))
-# 
-# data_e1 = aggregate( . ~ sub*data_x*Locs*Pattern, data = ind_data, FUN = "mean")
-# 
-# save(data_e1,file = "data/dataset.rda")
+################ generate dataset file ################
+sTime = -1
+eTime = 4
+timeLen = c(sTime,eTime)
+nameOfVar = c("condition","condition")
+f1 = "Locs"
+f2 = "Pattern"
 
-## ##################################################
+g1 <- rep(c("Upper","Lower","Center","Left","Right"),2)
+g2 <- rep(c("Glare","Control"), times=c(5,5))
+
+go1 <- c("Upper","Lower","Center","Left","Right")
+go2 <- c("Glare","Control")
+
+################ making dataset for e1 ##################
+data=fromJSON(file="./[python]pre_processing/data/data20211124.json")
+dat <- list((matrix(unlist(data$PDR),nrow=length(data$PDR),byrow=T)),
+            t(unlist(data$sub)),
+            t(unlist(data$condition)))
+names(dat) <- c('y', 'sub', 'condition')
+
+ind_data = makePupilDataset_mat2long(dat,c('condition','condition'),timeLen,list(g1,g2),list(go1,go2),c(f1,f2))
+
+data_e1 = aggregate( . ~ sub*data_x*Locs*Pattern, data = ind_data, FUN = "mean")
+
+save(data_e1,file = "./data/dataset20211124.rda")
 
 ```
 
@@ -63,6 +61,7 @@ CairoFonts(regular = "Times","Times")
 go1 <- c("Center","Upper","Lower","Left","Right")
 
 ######## file loading ######## 
+# load("./data/dataset20211124.rda")
 load("./data/dataset.rda")
 data_e1$Locs = factor(data_e1$Locs, go1)
 numOfSub = length(unique(data_e1$sub))

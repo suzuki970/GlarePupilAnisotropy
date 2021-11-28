@@ -16,19 +16,27 @@ datHash={"PDR":[],
          "numOfSaccade":[],
          "ampOfSaccade":[]
          }
-cfg={  
-    'TIME_START':-1,
-    'TIME_END':4
-    }
+
+cfg={'TIME_START':-1,
+     'TIME_END':4,
+     'THRES_DIFF':10,
+     'WID_ANALYSIS':4,
+     'useEye':2,
+     'WID_FILTER':[],
+     'mmFlag':False,
+     'normFlag':True,
+     's_trg':'SYNCTIME',
+     'visualization':False
+     }
+
+
 cfg['TIME'] = cfg['TIME_END']-cfg['TIME_START']
 
 folderName = glob.glob("./results/*")
 folderName.sort()
 
-mmFlag = False
-normFlag = True
 
-saveFileLocs = './'
+saveFileLocs = './data/'
 numOfSub = 0 
 
 for iSub,subName in enumerate(folderName):
@@ -46,7 +54,8 @@ for iSub,subName in enumerate(folderName):
         
     f.close()
 
-    eyeData,events,initialTimeVal,fs = asc2array(dat, 2, mmFlag, normFlag, 'SYNCTIME')
+    # eyeData,events,initialTimeVal,fs = asc2array(dat, 2, mmFlag, normFlag, 'SYNCTIME')
+    eyeData,events,initialTimeVal,fs = asc2array(dat, cfg)
     
     pupilData = eyeData['pupilData']
     gazeX = eyeData['gazeX']
