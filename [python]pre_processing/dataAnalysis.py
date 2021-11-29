@@ -66,16 +66,16 @@ for mm in mmName:
     dat[mm] = [d for i,d in enumerate(dat[mm]) if not i in rejectNumPCA]
 
 ######## rejection of outlier(interplation failed trial) #########
-max_val = [max(abs(y[i,])) for i in np.arange(y.shape[0])]
-fx = np.diff(y)
-rejectOutlier = []
-for i in np.arange(len(y)):
-    if len(np.unique(np.round(fx[i,],5))) < 20:
-        rejectOutlier.append(i)
+# max_val = [max(abs(y[i,])) for i in np.arange(y.shape[0])]
+# fx = np.diff(y)
+# rejectOutlier = []
+# for i in np.arange(len(y)):
+#     if len(np.unique(np.round(fx[i,],5))) < 20:
+#         rejectOutlier.append(i)
  
-y = np.delete(y,rejectOutlier,axis=0)
-for mm in mmName:
-    dat[mm] = [d for i,d in enumerate(dat[mm]) if not i in rejectOutlier]
+# y = np.delete(y,rejectOutlier,axis=0)
+# for mm in mmName:
+#     dat[mm] = [d for i,d in enumerate(dat[mm]) if not i in rejectOutlier]
          
 # y = re_sampling(y,250)
 # gazeX = re_sampling(np.array(dat['gazeX']),250)
@@ -121,17 +121,17 @@ for iSub in np.arange(1,int(max(dat['sub']))+1):
     ind = [i for i, sub in enumerate(dat['sub']) if sub == iSub]
     numOftrials.append(len(ind))
     rejectedTrial.append(NUM_TRIAL - len(ind))
-    if numOftrials[iSub-1] < NUM_TRIAL * 0.6:
-            reject.append(iSub)
+    # if numOftrials[iSub-1] < NUM_TRIAL * 0.4:
+    #         reject.append(iSub)
             
 print('# of trials = ' + str(numOftrials))
 print('Averaged # of trials = ' + str(np.round(np.mean(numOftrials),2)))
 print('SD # of trials = ' + str(np.round(np.std(numOftrials),2)))
 
-# th = NUM_TRIAL - 3*np.round(np.std(numOftrials),2)
-# for iSub in np.arange(1,int(max(dat['sub']))+1):
-#     if numOftrials[iSub-1] < th:
-#         reject.append(iSub)
+th = NUM_TRIAL - 1.5*np.round(np.std(numOftrials),2)
+for iSub in np.arange(1,int(max(dat['sub']))+1):
+    if numOftrials[iSub-1] < th:
+        reject.append(iSub)
 
 rejectSub = [i for i,d in enumerate(dat['sub']) if d in reject]
 print('rejected subject = ' + str(reject))
@@ -180,7 +180,7 @@ for iSub in np.unique(dat['sub']):
      tmp_p = np.array(events['PDR'])[ind].mean(axis=0)
      tmp_p = tmp_p[np.argwhere(((x>time_min) & (x<time_max)))]
      
-     # plt.subplot(5,4,iSub)
+     plt.subplot(5,5,iSub)
      plt.plot(x_t,tmp_p)
      
      t = tmp_p.reshape(-1)
@@ -200,11 +200,12 @@ for iSub in np.unique(dat['sub']):
              
      indices = indices[np.argwhere(np.array(ev) == 0).reshape(-1)]
     
-     indices = indices[0]
-     
-     plt.plot(x_t[indices],tmp_p[indices],'ro')  
-     dat['min'].append(float(x_t[indices]))
-      
+     if len(indices)>0:
+         indices = indices[0]
+         plt.plot(x_t[indices],tmp_p[indices],'ro')  
+         dat['min'].append(float(x_t[indices]))
+     else:
+         dat['min'].append(0)
 
      # ind = np.argwhere(np.array(dat['sub']) == iSub).reshape(-1)
      # tmp_y = y[ind,indices:]

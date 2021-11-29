@@ -42,7 +42,7 @@ Novera Istiqomah, Yuta Suzuki, Yuya Kinzuka, Minami Tetsuto, Shigeki Nakauchi
 # go2 <- c("Glare","Control")
 # 
 # ################ making dataset for e1 ##################
-# data=fromJSON(file="./[python]pre_processing/data/data20211124.json")
+# data=fromJSON(file="../[python]pre_processing/data/data20211124.json")
 # dat <- list((matrix(unlist(data$PDR),nrow=length(data$PDR),byrow=T)),
 #             t(unlist(data$sub)),
 #             t(unlist(data$condition)))
@@ -54,194 +54,43 @@ Novera Istiqomah, Yuta Suzuki, Yuya Kinzuka, Minami Tetsuto, Shigeki Nakauchi
 # 
 # data_e1$minLatency = data$min
 # 
-# save(data_e1,file = "./data/dataset20211124.rda")
-
-```
-
-```{r, message=FALSE, warning=FALSE, echo=FALSE, include=FALSE}
-# countFigNum = 1
-# SIZE_FONT=20
-# CairoFonts(regular = "Times","Times")
-# go1 <- c("Center","Upper","Lower","Left","Right")
-# 
-# ######## file loading ######## 
-# load("./data/dataset20211124.rda")
-# load("./data/dataset.rda")
+# #### file loading #### 
 # data_e1$Locs = factor(data_e1$Locs, go1)
 # numOfSub = length(unique(data_e1$sub))
-# sTime = -0.2
-# eTime = max(data_e1$data_x)
 # 
-# ######## Figure 2A ######## 
-# data_e1_ave = aggregate( data_y ~ data_x*Locs*Pattern, data = data_e1, FUN = "mean")
+# data_auc = data.frame()
+# for(iSub in unique(data_e1$sub)){
+#   for(iLocs in unique(data_e1$Locs)){
+#     for(iPattern in unique(data_e1$Pattern)){
+#       tmp = data_e1[data_e1$sub == iSub &
+#                       data_e1$Locs == iLocs &
+#                       data_e1$Pattern == iPattern,]
+#       tmp = tmp[tmp$data_x > tmp$minLatency[1],]
 # 
-# config = list(lim_x = c(sTime, eTime),
-#               lim_y = c(-0.5, 0.7),
-#               alpha = 0.4,
-#               stride = 0.1,
-#               label_x = "Time [sec]",
-#               label_y = "Pupil Changes [z-scored]",
-#               title = "",
-#               linetype = TRUE,
-#               grCol = rep(c("#101010","#101010"),10),
-#               gr_outline =  rep(c("#101010","#101010"),10)
-# )
-# 
-# p <- disp(data_e1,config,1,c("Pattern","Locs"))
-# p <- p + 
-#   facet_grid(. ~ Locs)
-# 
-# config$ylim = round(seq(-0.5,0.75,0.25),2)
-# config$ylim_stride = 0.05
-# config$xlim = round(seq(0,4,1),2)
-# config$xlim_stride = 0.5
-# 
-# p = setEmptyStyle(p,config)
-# 
-# p = p +
-#   theme(
-#     axis.ticks = element_line(colour = "black",size = 0.5)
-#   )
-# 
-# p <- p + theme(
-#   # legend.position = c(0.9,0.35),
-#   legend.text = element_text(size = 7),
-#   legend.position = c(1, 0),
-#   legend.justification = c(1, 0)
-# )
-# 
-# eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
-# countFigNum = countFigNum+1
-# 
-# ######## Figure 2B ######## 
-# data_e1_ave = data_e1[data_e1$data_x >= 0,]
-# data_e1_ave = aggregate( data_y ~ sub*Locs*Pattern, data = data_e1_ave, FUN = "mean")
-# 
-# # gName = c('glare top','glare bottom','glare center','glare left','glare right',
-# #           'control top' ,'control bottom','control center','control left','control right')
-# # 
-# # f = data.frame(
-# #   sub = as.character(unique(data_e1_anova$sub)),
-# #   y = matrix(data_e1_anova$data_y,nrow = numOfSub)
-# # )
-# # 
-# # colnames(f) <- c("subject",gName)
-# # write.csv(f, "[JASP]Bayesian/data_average.csv",row.names=FALSE)
-# 
-# data_e1_anova = data_e1_ave[data_e1_ave$Locs != 'Center',]
-# anovakun(data_e1_anova,"sAB",long=T, peta=T, gg=T)
-# fig2a_anovatable = forDrawingSigANOVA
-# fig2a_ttest = forDrawingPost[["A"]][["bontab"]]
-# fig2a_inter = forDrawingPost[["A:B"]][["simtab"]]
-# 
-# ## cohen's d and BF 
-# fig2a_cohend=NULL
-# fig2a_bf=NULL
-# comb = rbind(c('Upper','Upper','Upper'),c('Lower','Left','Right'))
-# for(iLocs in 1:3){
-#   x = apply(rbind(data_e1_anova[data_e1_anova$Locs == comb[1,iLocs] & data_e1_anova$Pattern == 'Glare',]$data_y,
-#                   data_e1_anova[data_e1_anova$Locs == comb[1,iLocs] & data_e1_anova$Pattern == 'Control',]$data_y),2, mean)
-#   y = apply(rbind(data_e1_anova[data_e1_anova$Locs == comb[2,iLocs] & data_e1_anova$Pattern == 'Glare',]$data_y,
-#                   data_e1_anova[data_e1_anova$Locs == comb[2,iLocs] & data_e1_anova$Pattern == 'Control',]$data_y),2, mean)
-#   
-#   n = length(x)
-#   sc = sqrt((n*(var(x))+n*(var(y)))/(n*2))
-#   fig2a_cohend = rbind(fig2a_cohend,round(abs(mean(x)-mean(y))/sc,3))
-#   bayesF = ttestBF(x = x, y = y, paired=TRUE)
-#   fig2a_bf = rbind(fig2a_bf,round(exp(bayesF@bayesFactor[["bf"]]),3))
+#       peakMin = data_e1[data_e1$sub == iSub &
+#                           data_e1$Locs == iLocs &
+#                           data_e1$Pattern == iPattern,]
+#       peakMin =  mean(peakMin[peakMin$data_x < tmp$minLatency[1]+0.25 &
+#                                 peakMin$data_x > tmp$minLatency[1]-0.25,]$data_y)
+#       auc = 0
+#       for(ix in 1:(length(tmp$data_x))){
+#         auc = auc + ((tmp[ix,]$data_y-peakMin)*(1/500))
+#       }
+#       data_auc = rbind(data_auc,data.frame(
+#         sub = iSub,
+#         Locs = iLocs,
+#         Pattern = iPattern,
+#         data_y = c(peakMin,auc),
+#         comp = c('Early','Late')
+#       ))
+#     }
+#   }
 # }
 # 
-# fig2c_cohend=NULL
-# fig2c_bf=NULL
-# for(iLocs in 2:5){
-#   x = data_e1_anova[data_e1_anova$Locs == go1[iLocs] & data_e1_anova$Pattern == 'Glare',]$data_y
-#   y = data_e1_anova[data_e1_anova$Locs == go1[iLocs] & data_e1_anova$Pattern == 'Control',]$data_y
-#   
-#   n = length(x)
-#   sc = sqrt((n*(var(x))+n*(var(y)))/(n*2))
-#   fig2c_cohend = rbind(fig2c_cohend,round(abs(mean(x)-mean(y))/sc,3))
-#   bayesF = ttestBF(x = x, y = y, paired=TRUE)
-#   fig2c_bf = rbind(fig2c_bf,round(exp(bayesF@bayesFactor[["bf"]]),3))
-# }
-# 
-# config$label_x = ''
-# config$title = "Averaged Pupil Changes [z-scored]"
-# data_e1_anova$sub = subName[data_e1_anova$sub]
-# config$grCol = rep(c("black","white"),5)
-# config$gr_outline = rep(c("black","black"),5)
-# p <- dispLineGraph(data_e1_ave,config,c("Locs","Pattern"))+
-#   # geom_point(data=data_e1_anova,aes(x = Pattern,y = data_y, group=interaction(Locs,sub)), color="black",alpha=0.2)+
-#   # geom_line(data=data_e1_anova,aes(x = Pattern,y = data_y, group=interaction(Locs,sub),color=sub),alpha=0.8)+
-#   facet_grid(. ~ Locs)
-# 
-# config$ylim = round(seq(-0.3,0.5,0.1),2)
-# config$ylim_stride = 0.05
-# config$xlim = round(seq(1,2,1),2)
-# config$xlim_stride = 0.5
-# 
-# p = setEmptyStyle(p,config)
-# 
-# p = p + theme(
-#   # axis.ticks = element_line(colour = "black",size = 0.5),
-#   axis.title.x=element_blank(),
-#   axis.text.x=element_blank(),
-#   axis.ticks.x = element_blank(),
-#   legend.position = c(1, 0),
-#   legend.justification = c(1, 0),
-# )
-# 
-# eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
-# countFigNum = countFigNum+1
-# 
-# ######## Figure 2C ######## 
-# data_e1_diff = data_e1_ave[data_e1_ave$Pattern == 'Glare',]
-# data_e1_diff$Pattern = NULL
-# data_e1_diff$data_y = data_e1_ave[data_e1_ave$Pattern == 'Glare',]$data_y - data_e1_ave[data_e1_ave$Pattern == 'Control',]$data_y
-# 
-# config$label_y = "Differences [z-scored]"
-# pVal=NULL
-# for(iLocs in 1:5){
-#   y = data_e1_diff[data_e1_diff$Locs == go1[iLocs],]$data_y
-#   model = t.test(y, mu=0)
-#   pVal = rbind(pVal,model[["p.value"]])
-# }
-# 
-# p <- dispLineGraph(data_e1_diff,config,c("Locs"))
-# 
-# p <- p + theme(
-#   legend.position = 'none'
-# )
-# 
-# config$ylim = round(seq(-0.3,0.1,0.1),2)
-# config$ylim_stride = 0.05
-# config$xlim = round(seq(1,5,1),2)
-# config$xlim_stride = 0.5
-# 
-# p = setEmptyStyle(p,config)
-# 
-# p = p +
-#   theme(
-#     axis.ticks = element_line(colour = "black",size = 0.5)
-#    )
-# 
-# eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
-# countFigNum = countFigNum+1
+# # save(data_auc,file = "./data/data_auc20211124.rda")
+# save(data_e1,data_auc,file = "./data/dataset20211124.rda")
 
 ```
-
-
-<!-- ## Figure 2 -->
-<!-- ```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=10, fig.width=13} -->
-<!-- # layout <- rbind(c(1,1),c(2,3)) -->
-<!-- # p = combineGraphs(seq(1,3),'p',layout) -->
-<!-- # width_fig=13 -->
-<!-- # height_fig=10 -->
-<!-- # ggsave(file = "figure/fig2.pdf", -->
-<!-- #        plot = p, dpi = 500, -->
-<!-- #        width = width_fig, height = height_fig, -->
-<!-- #        family="Times") -->
-<!-- ``` -->
-
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, include=FALSE}
 countFigNum = 1
@@ -271,45 +120,47 @@ config = list(lim_x = c(sTime, eTime),
               gr_outline =  rep(c("#101010","#101010"),10)
 )
 
-#### file loading #### 
-data_e1$Locs = factor(data_e1$Locs, go1)
-numOfSub = length(unique(data_e1$sub))
+p <- disp(data_e1,config,1,c("Pattern","Locs"))
+p <- p +
+  facet_grid(. ~ Locs)
 
-# data_auc = data.frame()
-# for(iSub in unique(data_e1$sub)){
-#   for(iLocs in unique(data_e1$Locs)){
-#     for(iPattern in unique(data_e1$Pattern)){
-#       tmp = data_e1[data_e1$sub == iSub &
-#                       data_e1$Locs == iLocs &
-#                       data_e1$Pattern == iPattern,]
-#       tmp = tmp[tmp$data_x > tmp$minLatency[1],]
-#       
-#       peakMin = data_e1[data_e1$sub == iSub &
-#                           data_e1$Locs == iLocs &
-#                           data_e1$Pattern == iPattern,]
-#       peakMin =  mean(peakMin[peakMin$data_x < tmp$minLatency[1]+0.25 &
-#                                 peakMin$data_x > tmp$minLatency[1]-0.25,]$data_y)
-#       auc = 0
-#       for(ix in 1:(length(tmp$data_x))){
-#         auc = auc + ((tmp[ix,]$data_y-peakMin)*(1/500))
-#       }
-#       data_auc = rbind(data_auc,data.frame(
-#         sub = iSub,
-#         Locs = iLocs,
-#         Pattern = iPattern,
-#         data_y = c(peakMin,auc),
-#         comp = c('Early','Late')
-#       ))
-#     }
-#   }
-# }
-# 
-# save(data_auc,file = "data/data_auc20211124.rda")
-# load("data/data_auc.rda")
-load("data/data_auc20211124.rda")
+config$ylim = round(seq(-0.5,0.75,0.25),2)
+config$ylim_stride = 0.05
+config$xlim = round(seq(0,4,1),2)
+config$xlim_stride = 0.5
+p = setEmptyStyle(p,config)
 
+p = p +
+  theme(
+    axis.ticks = element_line(colour = "black",size = 0.5),
+    legend.text = element_text(size = 7),
+    legend.position = c(1, 0),
+    legend.justification = c(1, 0)
+  )
+
+
+data_e1_center = data_e1[data_e1$data_x >= 0 & data_e1$Locs == 'Center',]
+data_e1_center = aggregate( data_y ~ sub*data_x*Pattern, data = data_e1_center, FUN = "mean")
+data_e1_center = aggregate( data_y ~ sub*Pattern, data = data_e1_center, FUN = "mean")
+
+x = data_e1_center[data_e1_center$Pattern == 'Glare',]$data_y
+y = data_e1_center[data_e1_center$Pattern == 'Control',]$data_y
+
+cohen_d = cohen.d(x,y,paired=TRUE, within=TRUE)
+bf = ttestBF(x = x, y = y, paired=TRUE)
+
+center_table = list(list(
+  anovaTab = t.test(x,y,var.equal=T,paired=T),
+  cohend = round(abs(cohen_d[["estimate"]]),3),
+  bf = round(exp(bf@bayesFactor[["bf"]]),3)
+))
+names(center_table) <- c('center_table')
+
+anovaTabAll = c(anovaTabAll,center_table)
+
+
+######## Figure 2A ########
 data_auc$Locs = factor(data_auc$Locs, go1)
-
 data_center = data_auc[data_auc$Locs == 'Center',]
 
 config = list(
@@ -469,7 +320,14 @@ anovaTabAll = c(anovaTabAll,data_anova_Late)
 
 ```
 
-## Early and late compornents
+## Results
+We presented the glare illusion and halo stimuli at one out of five VF locations (i.e., upper, lower, left, right, and center). As reported previously, enhanced pupil constriction in the Center condition was observed shown in Fig.2A 
+($t$(`r anovaTabAll[["center_table"]][["anovaTab"]][["parameter"]][["df"]]`) = 
+`r round(anovaTabAll[["center_table"]][["anovaTab"]][["statistic"]][["t"]],3)`, 
+$p$ = `r round(anovaTabAll[["center_table"]][["anovaTab"]][["p.value"]],3)`, 
+Cohen’s  $d_z$ = `r anovaTabAll[["center_table"]][["cohend"]]`, 
+$BF_{10}$ =  `r anovaTabAll[["center_table"]][["bf"]]`)
+
 To assess temporal component of papillary response, the early component corresponded to peak pupil constriction after stimulus onset and the late comportment which was defined by are under the curve (AUC) were calculated (see Method). In early component (Fig 3B), pupil constriction to the glare illusion was larger than control pattern as the previous analysis 
 The two-way repeated measures ANOVA revealed a significant main effect on the pattern and VF locations ($F$(`r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][4,]['df.col'],3)`, 
 `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][5,]['df.col'],3)`) = 
@@ -493,42 +351,43 @@ $\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][6,]['p.et
 $BF_{10}$ =  `r  round(anovaTabAll[["data_anova_Early"]][["bf"]][4]/anovaTabAll[["data_anova_Early"]][["bf"]][3],3)`).
 
 The two-way repeated measures ANOVA revealed a significant main effect on the VF location and interaction 
-($F$(`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][4,]['df.col'],3)`, 
-`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][5,]['df.col'],3)`) = 
-`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][4,]['f.col'],3)`, 
-p = `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][4,]['p.col'],3)`, 
-$\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][4,]['p.eta^2'],3)`, 
-$BF_{10}$ =  `r anovaTabAll[["data_anova_Late"]][["bf"]][2]`; 
+($F$(`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['df.col'],3)`, 
+`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][3,]['df.col'],3)`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['f.col'],3)`, 
+p = `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['p.col'],3)`, 
+$\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['p.eta^2'],3)`, 
+$BF_{10}$ =  `r anovaTabAll[["data_anova_Late"]][["bf"]][1]`; 
 $F$(`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][6,]['df.col'],3)`, 
 `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][7,]['df.col'],3)`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][6,]['f.col'],3)`, 
 p = `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][6,]['p.col'],3)`, 
 $\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][6,]['p.eta^2'],3)`, 
 $BF_{10}$ =  `r  round(anovaTabAll[["data_anova_Late"]][["bf"]][4]/anovaTabAll[["data_anova_Late"]][["bf"]][3],3)`).
-The UVF produces larger pupil dilation than the other VF, regardless of the stimulus pattern 
-(
-
+The UVF produces larger pupil dilation than the left and Right VFs
+($t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['df']`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['t'],3)`, 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['adj.p'],3)`; 
 )
 in line with the previous studies __(Hong et al., 2001; Sabeti et al., 2011; Tan et al., 2001; Wilhelm et al., 2000)__.
 
 
 
 
-There was no significant main effect on the pattern  
-($F$(`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['df.col'],3)`, 
-`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][3,]['df.col'],3)`) = 
-`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['f.col'],3)`, 
-p = `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['p.col'],3)`, 
-$\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['p.eta^2'],3)`, 
-$BF_{10}$ =  `r anovaTabAll[["data_anova_Late"]][["bf"]][1]`).
+<!-- There was no significant main effect on the pattern   -->
+<!-- ($F$(`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['df.col'],3)`,  -->
+<!-- `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][3,]['df.col'],3)`) =  -->
+<!-- `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['f.col'],3)`,  -->
+<!-- p = `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['p.col'],3)`,  -->
+<!-- $\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['p.eta^2'],3)`,  -->
+<!-- $BF_{10}$ =  `r anovaTabAll[["data_anova_Late"]][["bf"]][1]`). -->
 
-There was no significant interaction between visual field and stimulus pattern 
-($F$(`r round(fig3a_anovatable[6,]['df.col'],3)`, 
-`r round(fig3a_anovatable[7,]['df.col'],3)`) = `r round(fig3a_anovatable[6,]['f.col'],3)`, 
-p = `r round(fig3a_anovatable[6,]['p.col'],3)`, 
-$\eta^2_p$ =  `r round(fig3a_anovatable[6,]['p.eta^2'],3)`). 
+<!-- There was no significant interaction between visual field and stimulus pattern  -->
+<!-- ($F$(`r round(fig3a_anovatable[6,]['df.col'],3)`,  -->
+<!-- `r round(fig3a_anovatable[7,]['df.col'],3)`) = `r round(fig3a_anovatable[6,]['f.col'],3)`,  -->
+<!-- p = `r round(fig3a_anovatable[6,]['p.col'],3)`,  -->
+<!-- $\eta^2_p$ =  `r round(fig3a_anovatable[6,]['p.eta^2'],3)`).  -->
 
-In late component, there was a significant interaction between visual field and stimulus pattern ($F$(`r round(fig3b_anovatable[6,]['df.col'],3)`, `r round(fig3b_anovatable[7,]['df.col'],3)`) = `r round(fig3b_anovatable[6,]['f.col'],3)`, p = `r round(fig3b_anovatable[6,]['p.col'],3)`, $\eta^2_p$ =  `r round(fig3b_anovatable[6,]['p.eta^2'],3)`). Crucial, the significant differences of pupil response between glare and control stimuli was seen only in the UVF (F(1,`r round(fig3b_inter[6,]['df.col'],3)`) = `r round(fig3b_inter[5,]['f.col'],3)`,p = `r round(fig3b_inter[5,]['p.col'],3)`, $\eta^2_p$ =  `r round(fig3b_inter[5,]['p.eta^2'],3)`). 
+<!-- In late component, there was a significant interaction between visual field and stimulus pattern ($F$(`r round(fig3b_anovatable[6,]['df.col'],3)`, `r round(fig3b_anovatable[7,]['df.col'],3)`) = `r round(fig3b_anovatable[6,]['f.col'],3)`, p = `r round(fig3b_anovatable[6,]['p.col'],3)`, $\eta^2_p$ =  `r round(fig3b_anovatable[6,]['p.eta^2'],3)`). Crucial, the significant differences of pupil response between glare and control stimuli was seen only in the UVF (F(1,`r round(fig3b_inter[6,]['df.col'],3)`) = `r round(fig3b_inter[5,]['f.col'],3)`,p = `r round(fig3b_inter[5,]['p.col'],3)`, $\eta^2_p$ =  `r round(fig3b_inter[5,]['p.eta^2'],3)`).  -->
 
 $$
 AUC = \sum_{i=0.787}^4 x_i-x_{0.787}
