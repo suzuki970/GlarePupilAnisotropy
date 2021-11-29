@@ -6,7 +6,8 @@ output:
   word_document
   # slidy_presentation:
   #   css: style.css
-
+params:
+  year: 2021
 ---
 
 ```{r setup, include=FALSE}
@@ -253,6 +254,8 @@ numOfSub = length(unique(data_e1$sub))
 sTime = -0.2
 eTime = max(data_e1$data_x)
 
+anovaTabAll = list()
+
 ######## Figure 2A ########
 data_e1_ave = aggregate( data_y ~ data_x*Locs*Pattern, data = data_e1, FUN = "mean")
 
@@ -272,43 +275,36 @@ config = list(lim_x = c(sTime, eTime),
 data_e1$Locs = factor(data_e1$Locs, go1)
 numOfSub = length(unique(data_e1$sub))
 
-# data_time_center = data_e1[data_e1$Locs == 'Center',]
-
-# peakMin = data_e1[data_e1$Locs == 'Center',]
-# peakMin = aggregate( data_y ~ sub*data_x, data = peakMin, FUN = "mean")
-# peakMin = aggregate( data_y ~ data_x, data = peakMin, FUN = "mean")
-# peakMin_ind = peakMin[peakMin$data_y == min(peakMin$data_y),]$data_x
+# data_auc = data.frame()
+# for(iSub in unique(data_e1$sub)){
+#   for(iLocs in unique(data_e1$Locs)){
+#     for(iPattern in unique(data_e1$Pattern)){
+#       tmp = data_e1[data_e1$sub == iSub &
+#                       data_e1$Locs == iLocs &
+#                       data_e1$Pattern == iPattern,]
+#       tmp = tmp[tmp$data_x > tmp$minLatency[1],]
+#       
+#       peakMin = data_e1[data_e1$sub == iSub &
+#                           data_e1$Locs == iLocs &
+#                           data_e1$Pattern == iPattern,]
+#       peakMin =  mean(peakMin[peakMin$data_x < tmp$minLatency[1]+0.25 &
+#                                 peakMin$data_x > tmp$minLatency[1]-0.25,]$data_y)
+#       auc = 0
+#       for(ix in 1:(length(tmp$data_x))){
+#         auc = auc + ((tmp[ix,]$data_y-peakMin)*(1/500))
+#       }
+#       data_auc = rbind(data_auc,data.frame(
+#         sub = iSub,
+#         Locs = iLocs,
+#         Pattern = iPattern,
+#         data_y = c(peakMin,auc),
+#         comp = c('Early','Late')
+#       ))
+#     }
+#   }
+# }
 # 
-data_auc = data.frame()
-for(iSub in unique(data_e1$sub)){
-  for(iLocs in unique(data_e1$Locs)){
-    for(iPattern in unique(data_e1$Pattern)){
-      tmp = data_e1[data_e1$sub == iSub &
-                      data_e1$Locs == iLocs &
-                      data_e1$Pattern == iPattern,]
-      tmp = tmp[tmp$data_x > tmp$minLatency[1],]
-      
-      peakMin = data_e1[data_e1$sub == iSub &
-                          data_e1$Locs == iLocs &
-                          data_e1$Pattern == iPattern,]
-      peakMin =  mean(peakMin[peakMin$data_x < tmp$minLatency[1]+0.25 &
-                                peakMin$data_x > tmp$minLatency[1]-0.25,]$data_y)
-      auc = 0
-      for(ix in 1:(length(tmp$data_x))){
-        auc = auc + ((tmp[ix,]$data_y-peakMin)*(1/500))
-      }
-      data_auc = rbind(data_auc,data.frame(
-        sub = iSub,
-        Locs = iLocs,
-        Pattern = iPattern,
-        data_y = c(peakMin,auc),
-        comp = c('Early','Late')
-      ))
-    }
-  }
-}
-
-save(data_auc,file = "data/data_auc20211124.rda")
+# save(data_auc,file = "data/data_auc20211124.rda")
 # load("data/data_auc.rda")
 load("data/data_auc20211124.rda")
 
@@ -416,25 +412,121 @@ p <- p + theme(
 eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
 countFigNum = countFigNum+1
 
+#### Early component ANOVA #### 
+
 data_anova = data_auc[data_auc$comp == 'Early',]
 data_anova$comp = NULL
+
 anovakun(data_anova,"sAB",long=T, peta=T, gg=T)
+
+data_anova$Locs = factor(data_anova$Locs,levels = unique(data_anova$Locs))
+data_anova$Pattern = factor(data_anova$Pattern,levels = unique(data_anova$Pattern))
+data_anova$sub = factor(data_anova$sub,levels = unique(data_anova$sub))
+
+data_anova_Early_BF = anovaBF(data_y ~ Locs*Pattern + sub, data=data_anova, whichRandom = "sub")
+
 fig3a_anovatable = forDrawingSigANOVA
 fig3a_ttest = forDrawingPost[["A"]][["bontab"]]
 fig3a_inter = forDrawingPost[["A:B"]][["simtab"]]
 
+data_anova_Early = list(list(
+  anovaTab = forDrawingSigANOVA,
+  post = forDrawingPost[["A"]][["bontab"]],
+  bf = round(exp(data_anova_Early_BF@bayesFactor[["bf"]]),3),
+  fig3a_ttest = fig3a_ttest,
+  fig3a_inter = fig3a_inter
+))
+
+names(data_anova_Early) <- c('data_anova_Early')
+anovaTabAll = c(anovaTabAll,data_anova_Early)
+
+#### Late component ANOVA #### 
 data_anova = data_auc[data_auc$comp == 'Late',]
 data_anova$comp = NULL
 anovakun(data_anova,"sAB",long=T, peta=T, gg=T)
+
+data_anova$Locs = factor(data_anova$Locs,levels = unique(data_anova$Locs))
+data_anova$Pattern = factor(data_anova$Pattern,levels = unique(data_anova$Pattern))
+data_anova$sub = factor(data_anova$sub,levels = unique(data_anova$sub))
+
+data_anova_Late_BF = anovaBF(data_y ~ Locs*Pattern + sub, data=data_anova, whichRandom = "sub")
+
 fig3b_anovatable = forDrawingSigANOVA
 fig3b_ttest = forDrawingPost[["A"]][["bontab"]]
 fig3b_inter = forDrawingPost[["A:B"]][["simtab"]]
+
+data_anova_Late = list(list(
+  anovaTab = forDrawingSigANOVA,
+  post = forDrawingPost[["A"]][["bontab"]],
+  bf = round(exp(data_anova_Late_BF@bayesFactor[["bf"]]),3),
+  fig3b_ttest = fig3b_ttest,
+  fig3b_inter = fig3b_inter
+))
+
+names(data_anova_Late) <- c('data_anova_Late')
+anovaTabAll = c(anovaTabAll,data_anova_Late)
+
+
 ```
 
 ## Early and late compornents
-To assess temporal component of papillary response, the early component corresponded to peak pupil constriction after stimulus onset and the late comportment which was defined by are under the curve (AUC) were calculated (see Method). In early component (Fig 3B), pupil constriction to the glare illusion was larger than control pattern as the previous analysis ($F$(`r round(fig3a_anovatable[4,]['df.col'],3)`, `r round(fig3a_anovatable[5,]['df.col'],3)`) = `r round(fig3a_anovatable[4,]['f.col'],3)`, p = `r round(fig3a_anovatable[4,]['p.col'],3)`, $\eta^2_p$ =  `r round(fig3a_anovatable[4,]['p.eta^2'],3)`). 
-The UVF produces larger pupil dilation than the other visual field regardless of the stimulus pattern ($F$(`r round(fig3a_anovatable[2,]['df.col'],3)`, `r round(fig3a_anovatable[3,]['df.col'],3)`) = `r round(fig3a_anovatable[2,]['f.col'],3)`, p = `r round(fig3a_anovatable[2,]['p.col'],3)`, $\eta^2_p$ =  `r round(fig3a_anovatable[2,]['p.eta^2'],3)`) in line with the previous studies __(Hong et al., 2001; Sabeti et al., 2011; Tan et al., 2001; Wilhelm et al., 2000)__.
-There was no significant interaction between visual field and stimulus pattern ($F$(`r round(fig3a_anovatable[6,]['df.col'],3)`, `r round(fig3a_anovatable[7,]['df.col'],3)`) = `r round(fig3a_anovatable[6,]['f.col'],3)`, p = `r round(fig3a_anovatable[6,]['p.col'],3)`, $\eta^2_p$ =  `r round(fig3a_anovatable[6,]['p.eta^2'],3)`). 
+To assess temporal component of papillary response, the early component corresponded to peak pupil constriction after stimulus onset and the late comportment which was defined by are under the curve (AUC) were calculated (see Method). In early component (Fig 3B), pupil constriction to the glare illusion was larger than control pattern as the previous analysis 
+The two-way repeated measures ANOVA revealed a significant main effect on the pattern and VF locations ($F$(`r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][4,]['df.col'],3)`, 
+`r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][5,]['df.col'],3)`) = 
+`r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][4,]['f.col'],3)`, 
+p = `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][4,]['p.col'],3)`, 
+$\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][4,]['p.eta^2'],3)`; 
+$BF_{10}$ =  `r anovaTabAll[["data_anova_Early"]][["bf"]][2]`, 
+$F$(`r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][2,]['df.col'],3)`, 
+`r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][3,]['df.col'],3)`) = 
+`r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][2,]['f.col'],3)`, 
+p = `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][2,]['p.col'],3)`, 
+$\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][2,]['p.eta^2'],3)`, 
+$BF_{10}$ =  `r anovaTabAll[["data_anova_Early"]][["bf"]][1]`). 
+However, the post-hoc multiple comparisons for the VF locations showed that any pair of VF loaction did not reach the significance level (p > 0.05).
+There was no significant interaction between the pattern and VF locations 
+($F$(`r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][6,]['df.col'],3)`, 
+`r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][7,]['df.col'],3)`) = 
+`r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][6,]['f.col'],3)`, 
+p = `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][6,]['p.col'],3)`, 
+$\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][6,]['p.eta^2'],3)`, 
+$BF_{10}$ =  `r  round(anovaTabAll[["data_anova_Early"]][["bf"]][4]/anovaTabAll[["data_anova_Early"]][["bf"]][3],3)`).
+
+The two-way repeated measures ANOVA revealed a significant main effect on the VF location and interaction 
+($F$(`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][4,]['df.col'],3)`, 
+`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][5,]['df.col'],3)`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][4,]['f.col'],3)`, 
+p = `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][4,]['p.col'],3)`, 
+$\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][4,]['p.eta^2'],3)`, 
+$BF_{10}$ =  `r anovaTabAll[["data_anova_Late"]][["bf"]][2]`; 
+$F$(`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][6,]['df.col'],3)`, 
+`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][7,]['df.col'],3)`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][6,]['f.col'],3)`, 
+p = `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][6,]['p.col'],3)`, 
+$\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][6,]['p.eta^2'],3)`, 
+$BF_{10}$ =  `r  round(anovaTabAll[["data_anova_Late"]][["bf"]][4]/anovaTabAll[["data_anova_Late"]][["bf"]][3],3)`).
+The UVF produces larger pupil dilation than the other VF, regardless of the stimulus pattern 
+(
+
+)
+in line with the previous studies __(Hong et al., 2001; Sabeti et al., 2011; Tan et al., 2001; Wilhelm et al., 2000)__.
+
+
+
+
+There was no significant main effect on the pattern  
+($F$(`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['df.col'],3)`, 
+`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][3,]['df.col'],3)`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['f.col'],3)`, 
+p = `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['p.col'],3)`, 
+$\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['p.eta^2'],3)`, 
+$BF_{10}$ =  `r anovaTabAll[["data_anova_Late"]][["bf"]][1]`).
+
+There was no significant interaction between visual field and stimulus pattern 
+($F$(`r round(fig3a_anovatable[6,]['df.col'],3)`, 
+`r round(fig3a_anovatable[7,]['df.col'],3)`) = `r round(fig3a_anovatable[6,]['f.col'],3)`, 
+p = `r round(fig3a_anovatable[6,]['p.col'],3)`, 
+$\eta^2_p$ =  `r round(fig3a_anovatable[6,]['p.eta^2'],3)`). 
 
 In late component, there was a significant interaction between visual field and stimulus pattern ($F$(`r round(fig3b_anovatable[6,]['df.col'],3)`, `r round(fig3b_anovatable[7,]['df.col'],3)`) = `r round(fig3b_anovatable[6,]['f.col'],3)`, p = `r round(fig3b_anovatable[6,]['p.col'],3)`, $\eta^2_p$ =  `r round(fig3b_anovatable[6,]['p.eta^2'],3)`). Crucial, the significant differences of pupil response between glare and control stimuli was seen only in the UVF (F(1,`r round(fig3b_inter[6,]['df.col'],3)`) = `r round(fig3b_inter[5,]['f.col'],3)`,p = `r round(fig3b_inter[5,]['p.col'],3)`, $\eta^2_p$ =  `r round(fig3b_inter[5,]['p.eta^2'],3)`). 
 
