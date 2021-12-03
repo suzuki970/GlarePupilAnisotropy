@@ -27,72 +27,8 @@ Novera Istiqomah, Yuta Suzuki, Yuya Kinzuka, Minami Tetsuto, Shigeki Nakauchi
 
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, include=FALSE}
-################ generate dataset file ################
-# sTime = -1
-# eTime = 4
-# timeLen = c(sTime,eTime)
-# nameOfVar = c("condition","condition")
-# f1 = "Locs"
-# f2 = "Pattern"
-# 
-# g1 <- rep(c("Upper","Lower","Center","Left","Right"),2)
-# g2 <- rep(c("Glare","Control"), times=c(5,5))
-# 
-# go1 <- c("Upper","Lower","Center","Left","Right")
-# go2 <- c("Glare","Control")
-# 
-# ################ making dataset for e1 ##################
-# data=fromJSON(file="../[python]pre_processing/data/data20211124.json")
-# dat <- list((matrix(unlist(data$PDR),nrow=length(data$PDR),byrow=T)),
-#             t(unlist(data$sub)),
-#             t(unlist(data$condition)))
-# names(dat) <- c('y', 'sub', 'condition')
-# 
-# ind_data = makePupilDataset_mat2long(dat,c('condition','condition'),timeLen,list(g1,g2),list(go1,go2),c(f1,f2))
-# 
-# data_e1 = aggregate( . ~ sub*data_x*Locs*Pattern, data = ind_data, FUN = "mean")
-# 
-# data_e1$minLatency = data$min
-# 
-# #### file loading #### 
-# data_e1$Locs = factor(data_e1$Locs, go1)
-# numOfSub = length(unique(data_e1$sub))
-# 
-# data_auc = data.frame()
-# for(iSub in unique(data_e1$sub)){
-#   for(iLocs in unique(data_e1$Locs)){
-#     for(iPattern in unique(data_e1$Pattern)){
-#       tmp = data_e1[data_e1$sub == iSub &
-#                       data_e1$Locs == iLocs &
-#                       data_e1$Pattern == iPattern,]
-#       tmp = tmp[tmp$data_x > tmp$minLatency[1],]
-# 
-#       peakMin = data_e1[data_e1$sub == iSub &
-#                           data_e1$Locs == iLocs &
-#                           data_e1$Pattern == iPattern,]
-#       peakMin =  mean(peakMin[peakMin$data_x < tmp$minLatency[1]+0.25 &
-#                                 peakMin$data_x > tmp$minLatency[1]-0.25,]$data_y)
-#       auc = 0
-#       for(ix in 1:(length(tmp$data_x))){
-#         auc = auc + ((tmp[ix,]$data_y-peakMin)*(1/500))
-#       }
-#       data_auc = rbind(data_auc,data.frame(
-#         sub = iSub,
-#         Locs = iLocs,
-#         Pattern = iPattern,
-#         data_y = c(peakMin,auc),
-#         comp = c('Early','Late')
-#       ))
-#     }
-#   }
-# }
-# 
-# # save(data_auc,file = "./data/data_auc20211124.rda")
-# save(data_e1,data_auc,file = "./data/dataset20211124.rda")
+# source("makeDataSet.R")
 
-```
-
-```{r, message=FALSE, warning=FALSE, echo=FALSE, include=FALSE}
 countFigNum = 1
 
 go1 <- c("Center","Upper","Lower","Left","Right")
@@ -128,6 +64,7 @@ config$ylim = round(seq(-0.5,0.75,0.25),2)
 config$ylim_stride = 0.05
 config$xlim = round(seq(0,4,1),2)
 config$xlim_stride = 0.5
+
 p = setEmptyStyle(p,config)
 
 p = p +
@@ -137,6 +74,9 @@ p = p +
     legend.position = c(1, 0),
     legend.justification = c(1, 0)
   )
+
+eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
+countFigNum = countFigNum+1
 
 
 data_e1_center = data_e1[data_e1$data_x >= 0 & data_e1$Locs == 'Center',]
@@ -158,7 +98,90 @@ names(center_table) <- c('center_table')
 
 anovaTabAll = c(anovaTabAll,center_table)
 
+######## MPCL ########
+data_MPCL = aggregate( data_y ~ sub*data_x, data = data_e1, FUN = "mean")
 
+data_MPCL$sub = subName[data_MPCL$sub]
+
+# data_MPCL_v = aggregate( data_y ~ sub*data_x*minLatency, data = data_e1, FUN = "mean")
+# data_MPCL_v = data_MPCL_v[data_MPCL_v$data_x == data_MPCL_v$minLatency,]
+# data_MPCL_v$sub = subName[data_MPCL_v$sub]
+events_data$sub = subName[events_data$sub]
+events_data = events_data[events_data$tag == 'min',]
+p = ggplot(data_MPCL,aes(x=data_x,y=data_y,group=sub,color=sub)) +
+  geom_point(data=events_data,aes(x=events,y=data_y,group=sub,color=tag),size=5) +
+  # geom_point(data=data_MPCL_v,aes(x=minLatency,y=data_y,group=sub),color='red',size=5) +
+  # facet_wrap(sub~.)+
+  xlab('Time [Sec]') +
+  ylab('Pupil changes [z-scored]') +
+  # scale_color_grey(start = 0.8, end = 0.2) +
+  scale_fill_manual(values=c('red','blue')) +
+  geom_line(color='black')
+
+config$ylim = round(seq(-0.5,1.5,0.25),2)
+config$ylim_stride = 0.05
+config$xlim = round(seq(0,4,1),2)
+config$xlim_stride = 0.2
+
+p = setEmptyStyle(p,config)
+
+eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
+countFigNum = countFigNum+1
+
+
+#### gaze heatmap #### 
+p = ggplot(gaze_data, aes(x=gazeX, y=gazeY,group = Locs) ) +
+  stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE) +
+  scale_fill_continuous(type = "viridis") +
+  facet_wrap(Locs~.)+
+  xlab("gaze x position [degree]")+
+  ylab("gaze y position [degree]")
+
+config$ylim = round(seq(-3,3,1),2)
+config$ylim_stride = 0.3
+config$xlim = round(seq(-3,3,1),2)
+config$xlim_stride = 0.3
+
+p = setEmptyStyle(p,config)+
+  coord_fixed(ratio = 1)
+
+eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
+countFigNum = countFigNum+1
+
+gaze_data_ave = aggregate( . ~ sub*Locs*Pattern, data = gaze_data, FUN = "mean")
+gaze_data_ave$data_y = gaze_data_ave$gazeY
+
+p <- dispLineGraph(gaze_data_ave,config,c("Locs","Pattern"))+
+  facet_grid(. ~ Locs)
+
+eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
+countFigNum = countFigNum+1
+
+
+```
+
+## Figure 2
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=5, fig.width=13}
+# p = combineGraphs(seq(1,2),'p',NULL)
+# width_fig=5
+# height_fig=3
+# CairoPDF(file="figure/fig3A",
+#          width=width_fig, height=height_fig)
+print(p1)
+# dev.off()
+```
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=8, fig.width=8}
+print(p2)
+```
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=8, fig.width=8}
+print(p3)
+```
+
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, include=FALSE}
+
+countFigNum = 1
+load("./data/dataset20211124.rda")
 ######## Figure 2A ########
 data_auc$Locs = factor(data_auc$Locs, go1)
 data_center = data_auc[data_auc$Locs == 'Center',]
@@ -174,6 +197,22 @@ config = list(
 )
 
 #### Figure 3A (center early) #### 
+tmp = data_center[data_center$comp == 'Early',]
+x = tmp[tmp$Pattern == 'Glare',]$data_y
+y = tmp[tmp$Pattern == 'Control',]$data_y
+
+cohen_d = cohen.d(x,y,paired=TRUE, within=TRUE)
+bf = ttestBF(x = x, y = y, paired=TRUE)
+
+center_early_table = list(list(
+  anovaTab = t.test(x,y,var.equal=T,paired=T),
+  cohend = round(abs(cohen_d[["estimate"]]),3),
+  bf = round(exp(bf@bayesFactor[["bf"]]),3)
+))
+names(center_early_table) <- c('center_early_table')
+
+anovaTabAll = c(anovaTabAll,center_early_table)
+
 p <- dispLineGraph(data_center[data_center$comp == 'Early',],config,c("Locs","Pattern"))+
   facet_grid(. ~ Locs)+
   ggtitle('Early')
@@ -194,7 +233,23 @@ p <- p + theme(
 eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
 countFigNum = countFigNum+1
 
-#### Figure 3A (late early) #### 
+#### Figure 3A (late early) ####
+tmp = data_center[data_center$comp == 'Late',]
+x = tmp[tmp$Pattern == 'Glare',]$data_y
+y = tmp[tmp$Pattern == 'Control',]$data_y
+
+cohen_d = cohen.d(x,y,paired=TRUE, within=TRUE)
+bf = ttestBF(x = x, y = y, paired=TRUE)
+
+center_late_table = list(list(
+  anovaTab = t.test(x,y,var.equal=T,paired=T),
+  cohend = round(abs(cohen_d[["estimate"]]),3),
+  bf = round(exp(bf@bayesFactor[["bf"]]),3)
+))
+names(center_late_table) <- c('center_late_table')
+
+anovaTabAll = c(anovaTabAll,center_late_table)
+
 config$label_y = "AUC [z-score]"
 
 p <- dispLineGraph(data_center[data_center$comp == 'Late',],config,c("Locs","Pattern"))+
@@ -317,7 +372,24 @@ data_anova_Late = list(list(
 names(data_anova_Late) <- c('data_anova_Late')
 anovaTabAll = c(anovaTabAll,data_anova_Late)
 
+```
 
+## Figure 3
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=5, fig.width=13}
+# p = combineGraphs(seq(1,2),'p',NULL)
+# width_fig=5
+# height_fig=3
+# CairoPDF(file="figure/fig3A",
+#          width=width_fig, height=height_fig)
+# print(p1)
+# print(p2)
+# dev.off()
+```
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=8, fig.width=13}
+# print(p3)
+```
+```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=8, fig.width=13}
+# print(p4)
 ```
 
 ## Results
@@ -350,6 +422,13 @@ p = `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][6,]['p.col'],3)`,
 $\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][6,]['p.eta^2'],3)`, 
 $BF_{10}$ =  `r  round(anovaTabAll[["data_anova_Early"]][["bf"]][4]/anovaTabAll[["data_anova_Early"]][["bf"]][3],3)`).
 
+For the Center condition, 
+($t$(`r anovaTabAll[["center_early_table"]][["anovaTab"]][["parameter"]][["df"]]`) = 
+`r round(anovaTabAll[["center_early_table"]][["anovaTab"]][["statistic"]][["t"]],3)`, 
+$p$ = `r round(anovaTabAll[["center_early_table"]][["anovaTab"]][["p.value"]],3)`, 
+Cohen’s  $d_z$ = `r anovaTabAll[["center_early_table"]][["cohend"]]`, 
+$BF_{10}$ =  `r anovaTabAll[["center_early_table"]][["bf"]]`)
+
 The two-way repeated measures ANOVA revealed a significant main effect on the VF location and interaction 
 ($F$(`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['df.col'],3)`, 
 `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][3,]['df.col'],3)`) = 
@@ -367,8 +446,49 @@ The UVF produces larger pupil dilation than the left and Right VFs
 ($t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['df']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['t'],3)`, 
 $p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['adj.p'],3)`; 
+$t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][2,]['df']`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][2,]['t'],3)`, 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][2,]['adj.p'],3)`; 
+$t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][3,]['df']`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][3,]['t'],3)`, 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][3,]['adj.p'],3)`; 
+$t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][4,]['df']`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][4,]['t'],3)`, 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][4,]['adj.p'],3)`; 
+$t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][5,]['df']`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][5,]['t'],3)`, 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][5,]['adj.p'],3)`; 
 )
+
+<!-- `r for(i in 1:10){print(paste('t(',anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][i,]['ss.col'],')',sep=''))}` -->
+`r for(i in 1:10){print(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][6,]['df.col'])}`
+
+($t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][6,]['df.col']`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][5,]['f.col'],3)`, 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][5,]['p.col'],3)`, 
+$\eta^2_p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][5,]['p.eta^2'],3)`; 
+$t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][8,]['df.col']`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][7,]['f.col'],3)`, 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][7,]['p.col'],3)`, 
+$\eta^2_p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][7,]['p.eta^2'],3)`; 
+$t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][10,]['df.col']`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][9,]['f.col'],3)`, 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][9,]['p.col'],3)`, 
+$\eta^2_p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][9,]['p.eta^2'],3)`; 
+$t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][12,]['df.col']`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][11,]['f.col'],3)`, 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][11,]['p.col'],3)`, 
+$\eta^2_p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][11,]['p.eta^2'],3)`
+)
+
 in line with the previous studies __(Hong et al., 2001; Sabeti et al., 2011; Tan et al., 2001; Wilhelm et al., 2000)__.
+
+For the Center condition, 
+($t$(`r anovaTabAll[["center_late_table"]][["anovaTab"]][["parameter"]][["df"]]`) = 
+`r round(anovaTabAll[["center_late_table"]][["anovaTab"]][["statistic"]][["t"]],3)`, 
+$p$ = `r round(anovaTabAll[["center_late_table"]][["anovaTab"]][["p.value"]],3)`, 
+Cohen’s  $d_z$ = `r anovaTabAll[["center_late_table"]][["cohend"]]`, 
+$BF_{10}$ =  `r anovaTabAll[["center_late_table"]][["bf"]]`)
 
 
 
@@ -389,25 +509,32 @@ in line with the previous studies __(Hong et al., 2001; Sabeti et al., 2011; Tan
 
 <!-- In late component, there was a significant interaction between visual field and stimulus pattern ($F$(`r round(fig3b_anovatable[6,]['df.col'],3)`, `r round(fig3b_anovatable[7,]['df.col'],3)`) = `r round(fig3b_anovatable[6,]['f.col'],3)`, p = `r round(fig3b_anovatable[6,]['p.col'],3)`, $\eta^2_p$ =  `r round(fig3b_anovatable[6,]['p.eta^2'],3)`). Crucial, the significant differences of pupil response between glare and control stimuli was seen only in the UVF (F(1,`r round(fig3b_inter[6,]['df.col'],3)`) = `r round(fig3b_inter[5,]['f.col'],3)`,p = `r round(fig3b_inter[5,]['p.col'],3)`, $\eta^2_p$ =  `r round(fig3b_inter[5,]['p.eta^2'],3)`).  -->
 
-$$
-AUC = \sum_{i=0.787}^4 x_i-x_{0.787}
-$$
+<!-- $$ -->
+<!-- AUC = \sum_{i=0.787}^4 x_i-x_{0.787} -->
+<!-- $$ -->
 
 ## Figure 3
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=5, fig.width=13}
-p = combineGraphs(seq(1,2),'p',NULL)
-width_fig=5
-height_fig=3
-CairoPDF(file="figure/fig3A",
-         width=width_fig, height=height_fig)
-print(p)
-dev.off()
-
-p = combineGraphs(seq(3,4),'p',NULL)
-width_fig=13
-height_fig=5
-CairoPDF(file="figure/fig3BC",
-         width=width_fig, height=height_fig)
-print(p)
-dev.off()
+# p = combineGraphs(seq(1,2),'p',NULL)
+# width_fig=5
+# height_fig=3
+# CairoPDF(file="figure/fig3A",
+#          width=width_fig, height=height_fig)
+# print(p)
+# dev.off()
+# 
+# p = combineGraphs(seq(3,4),'p',NULL)
+# width_fig=13
+# height_fig=5
+# CairoPDF(file="figure/fig3BC",
+#          width=width_fig, height=height_fig)
+# print(p)
+# dev.off()
+# 
+# width_fig=8
+# height_fig=8
+# CairoPDF(file="figure/gaze",
+#          width=width_fig, height=height_fig)
+# print(p5)
+# dev.off()
 ```

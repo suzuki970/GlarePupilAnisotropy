@@ -17,6 +17,7 @@ library(BayesFactor)
 library(rjson)
 library(reshape)
 library(quickpsy)
+library(RColorBrewer)
 
 if(exists(".anovakun.env")){
   sys.source("./data/anovakun_485.R", envir = .anovakun.env)
@@ -57,7 +58,7 @@ setEmptyStyle <- function(gData,config,size_font=20){
   
   gData = gData + 
     scale_y_continuous(breaks=config$ylim)+
-    # scale_x_continuous(breaks=config$xlim)+
+    scale_x_continuous(breaks=config$xlim)+
     coord_cartesian(xlim=c(config$xlim[1]-config$xlim_stride,rev(config$xlim)[1]+config$xlim_stride),
                     ylim=c(config$ylim[1]-config$ylim_stride,rev(config$ylim)[1]+config$ylim_stride),
                     expand=FALSE)+
