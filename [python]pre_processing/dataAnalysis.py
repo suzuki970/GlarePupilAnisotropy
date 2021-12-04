@@ -8,6 +8,7 @@ from pixel_size import pixel_size,pixel2angle
 import warnings
 import matplotlib.patches as patches
 import pandas as pd
+from makeEyemetrics import makeMicroSaccade
 
 warnings.simplefilter('ignore')
 
@@ -103,8 +104,8 @@ gazeY_p = np.mean(gazeY-center[1],axis=1)
 gazeX_p=pixel2angle(cfg['DOT_PITCH'],gazeX_p.tolist(),cfg['VISUAL_DISTANCE'])
 gazeY_p=pixel2angle(cfg['DOT_PITCH'],gazeY_p.tolist(),cfg['VISUAL_DISTANCE'])
 
-dat['gazeX'] = gazeX_p.tolist()
-dat['gazeY'] = gazeY_p.tolist()
+# dat['gazeX'] = gazeX_p.tolist()
+# dat['gazeY'] = gazeY_p.tolist()
 
 gazeX = np.mean(gazeX-center[0],axis=1)
 gazeY = np.mean(gazeY-center[1],axis=1)
@@ -284,8 +285,20 @@ print('The MPCL was = ' + str(round(np.mean(np.array(dat['min'])),3)) +
 # del dat['gazeX'], dat['gazeY']
 del dat['numOfTrial'], dat['numOfBlink'],dat['numOfSaccade'],dat['ampOfSaccade']
 
+for iSub in np.unique(dat['sub']):
+    ind = np.argwhere(np.array(dat['sub'])==np.int64(iSub)).reshape(-1)
+    events,ms = makeMicroSaccade(cfg,np.array(dat['gazeX'])[ind,:],np.array(dat['gazeY'])[ind,:])
 
-with open(os.path.join("./data/data20211124.json"),"w") as f:
-        json.dump(dat,f)
+
+plt.figure()
+for i,d in enumerate(events['x'][0]):
+    print(d[0])
+    # plt.subplot(4,5,i+1)
+    # x = d[-3]
+    # y = d[-2]
+    # plt.plot(x,y)
+    
+# with open(os.path.join("./data/data20211124.json"),"w") as f:
+#         json.dump(dat,f)
         
         
