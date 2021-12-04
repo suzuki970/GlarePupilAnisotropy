@@ -285,20 +285,31 @@ print('The MPCL was = ' + str(round(np.mean(np.array(dat['min'])),3)) +
 # del dat['gazeX'], dat['gazeY']
 del dat['numOfTrial'], dat['numOfBlink'],dat['numOfSaccade'],dat['ampOfSaccade']
 
+dat['ampOfMS'] = []
+dat['sTimeOfMS'] = []
 for iSub in np.unique(dat['sub']):
     ind = np.argwhere(np.array(dat['sub'])==np.int64(iSub)).reshape(-1)
-    events,ms = makeMicroSaccade(cfg,np.array(dat['gazeX'])[ind,:],np.array(dat['gazeY'])[ind,:])
-
-
-plt.figure()
-for i,d in enumerate(events['x'][0]):
-    print(d[0])
-    # plt.subplot(4,5,i+1)
-    # x = d[-3]
-    # y = d[-2]
-    # plt.plot(x,y)
+    ev,ms = makeMicroSaccade(cfg,np.array(dat['gazeX'])[ind,:],np.array(dat['gazeY'])[ind,:])
+    dat['ampOfMS'] = dat['ampOfMS'] + ms['ampOfMS']
+    dat['sTimeOfMS'] = dat['sTimeOfMS'] + ms['sTimeOfMS']
     
-# with open(os.path.join("./data/data20211124.json"),"w") as f:
-#         json.dump(dat,f)
-        
-        
+plt.figure()
+p = np.array(dat['ampOfMS']).mean(axis=0)
+plt.plot(p)
+
+# plt.figure(figsize=(10,10))
+# tNum=1
+# for i,d in enumerate(events[tNum]):
+
+#     # if d[0] == 'x':
+#     plt.subplot(3,5,i+1)
+#     plt.plot(d[-3],d[-2])
+#     plt.title(str(d[1])+'_'+d[0])
+    
+    # else:
+    #     plt.subplot(2,5,i+5)
+    #     plt.plot(d[-3],d[-2])
+    #     plt.title(str(d[1]))
+
+with open(os.path.join("./data/data20211124.json"),"w") as f:
+        json.dump(dat,f)

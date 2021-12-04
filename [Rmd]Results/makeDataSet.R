@@ -15,6 +15,55 @@ go2 <- c("Glare","Control")
 
 # ################ making dataset for e1 ##################
 data=fromJSON(file="../[python]pre_processing/data/data20211124.json")
+
+ind_data_ms = data.frame()
+for(iTrial in 1:length(data[["sTimeOfMS"]])){
+  numOfMS = length(data[["sTimeOfMS"]][[iTrial]])
+  ind_data_ms = rbind(ind_data_ms,
+                      data.frame(
+                        sub = rep(data$sub[iTrial],numOfMS),
+                        Locs = rep(g1[data$condition[iTrial]],numOfMS),
+                        Pattern = rep(g2[data$condition[iTrial]],numOfMS),
+                        data_y = data[["sTimeOfMS"]][[iTrial]]
+                      ))
+}
+
+ind_data_ms[ind_data_ms$data_y < 0,]$data_y = 360+ind_data_ms[ind_data_ms$data_y < 0,]$data_y
+ind_data_ms$DirCat = ind_data_ms$data_y
+
+dat <- list((matrix(unlist(data$ampOfMS),nrow=length(data$ampOfMS),byrow=T)))
+names(dat) <- c('y')
+numOfTrial = dim(dat$y)[1]
+numOfSub = length(unique(dat$sub))
+lengthOfTime = dim(dat$y)[2]
+
+sTime = timeLen[1]
+eTime = timeLen[2]
+
+x = seq(sTime,eTime,length=lengthOfTime)
+
+ind_data <- data.frame(
+  sub =  rep( dat$sub, times = rep( lengthOfTime, numOfTrial)),
+  data_y = t(matrix(t(dat$y),nrow=1)),
+  data_x = x
+)
+ind_data_timeCourseMS = data.frame(
+  sub = rep(data$sub[iTrial],numOfMS),
+  Locs = rep(g1[data$condition[iTrial]],numOfMS),
+  Pattern = rep(g2[data$condition[iTrial]],numOfMS),
+  data_y = data[["sTimeOfMS"]][[iTrial]]
+)
+
+# data_ms_ave = aggregate( data_y ~ sub*Locs*Pattern, data = ind_data_ms, FUN = "mean")
+
+p = ggplot(ind_data_ms, aes(x = DirCat, group = Locs,fill=Pattern)) +
+  geom_histogram(binwidth = 15, boundary = -15) +
+  coord_polar(start = 1.57) +
+  facet_grid(Pattern~Locs) +
+  scale_x_continuous(breaks=seq(0, 360, by=30), expand=c(0,0), lim=c(0, 360))
+  # scale_x_continuous(limits = c(0,360))
+
+
 dat <- list((matrix(unlist(data$PDR),nrow=length(data$PDR),byrow=T)),
             t(unlist(data$sub)),
             t(unlist(data$condition)))
