@@ -49,8 +49,8 @@ setEmptyStyle <- function(gData,config,size_font=20){
     axis.ticks = element_line(colour = "black",size = 0.5),
     text = element_text(size = size_font,family = "Times"),
     # text = element_text(size = size_font,family = "Source Han Sans JP ExtraLight"),
-    legend.title = element_text(size=(size_font/2)),
-    legend.text = element_text(size=(size_font/2)),
+    legend.title = element_text(size=(size_font)),
+    legend.text = element_text(size=(size_font)),
     legend.key=element_rect(colour="transparent", fill=NA),
     plot.background=element_rect(fill="transparent", colour=NA),
     legend.background=element_rect(fill="transparent", colour=NA),
@@ -59,26 +59,19 @@ setEmptyStyle <- function(gData,config,size_font=20){
   
   gData = gData + 
     scale_y_continuous(breaks=config$ylim)+
-    scale_x_continuous(breaks=config$xlim)+
+    # scale_x_continuous(breaks=config$xlim)+
     coord_cartesian(xlim=c(config$xlim[1]-config$xlim_stride,rev(config$xlim)[1]+config$xlim_stride),
                     ylim=c(config$ylim[1]-config$ylim_stride,rev(config$ylim)[1]+config$ylim_stride),
                     expand=FALSE)+
+    annotate(x=config$xlim[1],xend=rev(config$xlim)[1], 
+             y=config$ylim[1]-config$ylim_stride, yend=config$ylim[1]-config$ylim_stride, 
+             colour="black", lwd=0.5, geom="segment")+
+    annotate(x=config$xlim[1]-config$xlim_stride, xend=config$xlim[1]-config$xlim_stride,
+             y=config$ylim[1], yend=rev(config$ylim)[1], 
+             colour="black", lwd=0.5, geom="segment")+
     theme(
       axis.ticks = element_line(colour = "black",size = 0.5)
     )
-  if(!is.null(config$xlim)){
-    gData = gData + 
-      annotate(x=config$xlim[1],xend=rev(config$xlim)[1], 
-               y=config$ylim[1]-config$ylim_stride, yend=config$ylim[1]-config$ylim_stride, 
-               colour="black", lwd=0.5, geom="segment")
-  }
-  if(!is.null(config$ylim)){
-    gData = gData + 
-      annotate(x=config$xlim[1]-config$xlim_stride, xend=config$xlim[1]-config$xlim_stride,
-               y=config$ylim[1], yend=rev(config$ylim)[1], 
-               colour="black", lwd=0.5, geom="segment")
-  }
-  
   
   return(gData)
 }

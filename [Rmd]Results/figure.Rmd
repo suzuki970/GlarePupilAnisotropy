@@ -37,6 +37,7 @@ if(!file.exists("./data/dataset.rda")){
 }
 
 countFigNum = 1
+CairoFonts(regular = "Times","Times")
 
 # file loading -----------------------------------------------------------------
 go1 <- c("Center","Upper","Lower","Left","Right")
@@ -157,20 +158,18 @@ countFigNum = countFigNum+1
 # micro-saccades polar plot -----------------------------------------------------------------
 # gaze_data_ave = aggregate( . ~ sub*Locs*Pattern, data = gaze_data, FUN = "mean")
 # gaze_data_ave$data_y = gaze_data_ave$gazeY
-for(iSub in unique(ind_data_ms$sub)){
-  ind = ind_data_ms[ind_data_ms$sub == iSub,]
-}
-
-h = tapply(ind_data_ms$data_y, 
-       list(ind_data_ms$Pattern,ind_data_ms$Locs,ind_data_ms$sub),
-       function(x){
-         return (hist(x, breaks=seq(0, 360, by=30),freq=F))
-         }
-       )
-x <- rnorm(1000)
-hist(x, freq = FALSE)
-
-h=hist(ind_data_ms$data_y,breaks=seq(0, 360, by=30),freq=FALSE)
+# for(iSub in unique(ind_data_ms$sub)){
+#   ind = ind_data_ms[ind_data_ms$sub == iSub,]
+# }
+# 
+# h = tapply(ind_data_ms$data_y, 
+#        list(ind_data_ms$Pattern,ind_data_ms$Locs,ind_data_ms$sub),
+#        function(x){
+#          return (hist(x, breaks=seq(0, 360, by=30),freq=F))
+#          }
+#        )
+# 
+# h=hist(ind_data_ms$data_y,breaks=seq(0, 360, by=30),freq=FALSE)
 
 # p = ggplot(ind_data_ms, aes(x = DirCat, group = Locs,fill=Pattern)) +
 #   geom_histogram()
@@ -179,8 +178,8 @@ h=hist(ind_data_ms$data_y,breaks=seq(0, 360, by=30),freq=FALSE)
 #   facet_grid(Pattern~Locs) +
 #   scale_x_continuous(breaks=seq(0, 360, by=30), expand=c(0,0), lim=c(0, 360))
   # scale_x_continuous(limits = c(0,360))
-eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
-countFigNum = countFigNum+1
+# eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
+# countFigNum = countFigNum+1
 
 # micro-saccades frequency -----------------------------------------------------------------
 config = list(lim_x = c(-0.2, eTime),
@@ -216,25 +215,21 @@ countFigNum = countFigNum+1
 
 ## Figure 2
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=5, fig.width=13}
-# p = combineGraphs(seq(1,2),'p',NULL)
-# width_fig=5
-# height_fig=3
-# CairoPDF(file="figure/fig3A",
-#          width=width_fig, height=height_fig)
+
+figName = c("Fig1A","SupFig1","SupFig2","MS")
 for(iFig in 1:(countFigNum-1)){
+  CairoPDF(file=paste("figure/",figName[iFig],sep=""))
   eval(parse(text=paste("print(p",iFig,")",sep="")))
+  dev.off()
 }
 
-# dev.off()
+# width_fig=10
+# height_fig=6
+# 
+#          # width=width_fig, height=height_fig)
+# print(p3)
+
 ```
-
-<!-- ```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=8, fig.width=8} -->
-<!-- print(p2) -->
-<!-- ``` -->
-<!-- ```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=8, fig.width=8} -->
-<!-- print(p3) -->
-<!-- ``` -->
-
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, include=FALSE}
 
@@ -250,6 +245,7 @@ countFigNum = 1
 # Figure 2A -----------------------------------------------------------------
 data_auc$Locs = factor(data_auc$Locs, go1)
 data_center = data_auc[data_auc$Locs == 'Center',]
+data_center$sub = subName[data_center$sub]
 
 config = list(
   alpha = 0.4,
@@ -279,7 +275,7 @@ names(center_early_table) <- c('center_early_table')
 anovaTabAll = c(anovaTabAll,center_early_table)
 
 p <- dispLineGraph(data_center[data_center$comp == 'Early',],config,c("Locs","Pattern"))+
-  facet_grid(. ~ Locs)+
+  # facet_grid(. ~ Locs)+
   ggtitle('Early')
 
 config$ylim = round(seq(-0.5,0,0.1),2)
@@ -289,16 +285,17 @@ config$xlim_stride = 0.5
 
 p = setEmptyStyle(p,config)
 
-p <- p + theme(
-  axis.title.x=element_blank(),
-  axis.text.x=element_blank(),
-  axis.ticks.x = element_blank()
-)
+# p <- p + theme(
+#   axis.title.x=element_blank(),
+#   axis.text.x=element_blank(),
+#   axis.ticks.x = element_blank()
+# )
 
 eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
 countFigNum = countFigNum+1
 
-#### Figure 3A (late early) ####
+
+# Figure 3A (center late)  --------------------------------------------------
 tmp = data_center[data_center$comp == 'Late',]
 x = tmp[tmp$Pattern == 'Glare',]$data_y
 y = tmp[tmp$Pattern == 'Control',]$data_y
@@ -318,26 +315,27 @@ anovaTabAll = c(anovaTabAll,center_late_table)
 config$label_y = "AUC [z-score]"
 
 p <- dispLineGraph(data_center[data_center$comp == 'Late',],config,c("Locs","Pattern"))+
-  facet_grid(. ~ Locs)+
+  # facet_grid(. ~ Locs)+
   ggtitle('Late')
 
-config$ylim = round(seq(0.5,1.5,0.5),2)
+config$ylim = round(seq(0,1.5,0.5),2)
 config$ylim_stride = 0.05
 config$xlim = round(seq(1,2,1),2)
 config$xlim_stride = 0.5
 
 p = setEmptyStyle(p,config)
 
-p <- p + theme(
-  axis.title.x=element_blank(),
-  axis.text.x=element_blank(),
-  axis.ticks.x = element_blank()
-)
+# p <- p + theme(
+#   axis.title.x=element_blank(),
+#   axis.text.x=element_blank(),
+#   axis.ticks.x = element_blank()
+# )
 
 eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
 countFigNum = countFigNum+1
 
 #### Figure 3BC #### 
+
 data_auc = data_auc[data_auc$Locs != 'Center',]
 
 config$label_y = "Pupil Changes [z-score]"
@@ -352,11 +350,11 @@ config$xlim = round(seq(1,2,1),2)
 config$xlim_stride = 0.5
 
 p = setEmptyStyle(p,config)
-p <- p + theme(
-  axis.title.x=element_blank(),
-  axis.text.x=element_blank(),
-  axis.ticks.x = element_blank()
-)
+# p <- p + theme(
+#   axis.title.x=element_blank(),
+#   axis.text.x=element_blank(),
+#   axis.ticks.x = element_blank()
+# )
 
 eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
 countFigNum = countFigNum+1
@@ -368,17 +366,17 @@ p <- dispLineGraph(data_auc[data_auc$comp == 'Late',],config,c("Locs","Pattern")
   facet_grid(. ~ Locs)+
   ggtitle('Late(AUC)')
 
-config$ylim = round(seq(0,1.2,0.2),2)
+config$ylim = round(seq(0,1.4,0.2),2)
 config$ylim_stride = 0.15
 config$xlim = round(seq(1,2,1),2)
 config$xlim_stride = 0.5
 
 p = setEmptyStyle(p,config)
-p <- p + theme(
-  axis.title.x=element_blank(),
-  axis.text.x=element_blank(),
-  axis.ticks.x = element_blank()
-)
+# p <- p + theme(
+#   axis.title.x=element_blank(),
+#   axis.text.x=element_blank(),
+#   axis.ticks.x = element_blank()
+# )
 
 eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
 countFigNum = countFigNum+1
@@ -441,6 +439,14 @@ anovaTabAll = c(anovaTabAll,data_anova_Late)
 
 ## Figure 3
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=5, fig.width=13}
+
+figName = c("Fig2A1","Fig2A2","Fig2B","Fig2C")
+for(iFig in 1:(countFigNum-1)){
+  CairoPDF(file=paste("figure/",figName[iFig],sep=""))
+  eval(parse(text=paste("print(p",iFig,")",sep="")))
+  dev.off()
+}
+
 # p = combineGraphs(seq(1,2),'p',NULL)
 # width_fig=5
 # height_fig=3
@@ -450,12 +456,7 @@ anovaTabAll = c(anovaTabAll,data_anova_Late)
 # print(p2)
 # dev.off()
 ```
-```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=8, fig.width=13}
-# print(p3)
-```
-```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=8, fig.width=13}
-# print(p4)
-```
+
 
 ## Results
 We presented the glare illusion and halo stimuli at one out of five VF locations (i.e., upper, lower, left, right, and center). As reported previously, enhanced pupil constriction in the Center condition was observed shown in Fig.2A 
@@ -507,22 +508,23 @@ $F$(`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][6,]['df.col'],3)`,
 p = `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][6,]['p.col'],3)`, 
 $\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][6,]['p.eta^2'],3)`, 
 $BF_{10}$ =  `r  round(anovaTabAll[["data_anova_Late"]][["bf"]][4]/anovaTabAll[["data_anova_Late"]][["bf"]][3],3)`).
+
 The UVF produces larger pupil dilation than the left and Right VFs
 ($t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['df']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['t'],3)`, 
-$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['adj.p'],3)`; 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['adj.p'],3)` for upper vs. left; 
 $t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][2,]['df']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][2,]['t'],3)`, 
-$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][2,]['adj.p'],3)`; 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][2,]['adj.p'],3)` for upper vs. Lower; 
 $t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][3,]['df']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][3,]['t'],3)`, 
-$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][3,]['adj.p'],3)`; 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][3,]['adj.p'],3)` for upper vs.left; 
 $t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][4,]['df']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][4,]['t'],3)`, 
-$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][4,]['adj.p'],3)`; 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][4,]['adj.p'],3)` for upper vs.left; 
 $t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][5,]['df']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][5,]['t'],3)`, 
-$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][5,]['adj.p'],3)`; 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][5,]['adj.p'],3)` for upper vs.left; 
 )
 
 <!-- `r for(i in 1:10){print(paste('t(',anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][i,]['ss.col'],')',sep=''))}` -->
@@ -531,19 +533,19 @@ $p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][5,]['adj.p'],3)
 ($t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][6,]['df.col']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][5,]['f.col'],3)`, 
 $p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][5,]['p.col'],3)`, 
-$\eta^2_p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][5,]['p.eta^2'],3)`; 
+$\eta^2_p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][5,]['p.eta^2'],3)` for Upper; 
 $t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][8,]['df.col']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][7,]['f.col'],3)`, 
 $p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][7,]['p.col'],3)`, 
-$\eta^2_p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][7,]['p.eta^2'],3)`; 
+$\eta^2_p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][7,]['p.eta^2'],3)` for Lower; 
 $t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][10,]['df.col']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][9,]['f.col'],3)`, 
 $p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][9,]['p.col'],3)`, 
-$\eta^2_p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][9,]['p.eta^2'],3)`; 
+$\eta^2_p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][9,]['p.eta^2'],3)` for Left; 
 $t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][12,]['df.col']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][11,]['f.col'],3)`, 
 $p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][11,]['p.col'],3)`, 
-$\eta^2_p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][11,]['p.eta^2'],3)`
+$\eta^2_p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][11,]['p.eta^2'],3)` for Right
 )
 
 in line with the previous studies __(Hong et al., 2001; Sabeti et al., 2011; Tan et al., 2001; Wilhelm et al., 2000)__.
