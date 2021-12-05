@@ -8,7 +8,7 @@ from pixel_size import pixel_size,pixel2angle
 import warnings
 import matplotlib.patches as patches
 import pandas as pd
-from makeEyemetrics import makeMicroSaccade
+from makeEyemetrics import makeMicroSaccade,draw_heatmap
 
 warnings.simplefilter('ignore')
 
@@ -284,15 +284,16 @@ del dat['numOfTrial'], dat['numOfBlink'],dat['numOfSaccade'],dat['ampOfSaccade']
 
 dat['ampOfMS'] = []
 dat['sTimeOfMS'] = []
+ms_events = []
 for iSub in np.unique(dat['sub']):
     ind = np.argwhere(np.array(dat['sub'])==np.int64(iSub)).reshape(-1)
-    ev,ms = makeMicroSaccade(cfg,np.array(dat['gazeX'])[ind,:],np.array(dat['gazeY'])[ind,:])
+    ev,ms,fs = makeMicroSaccade(cfg,np.array(dat['gazeX'])[ind,:],np.array(dat['gazeY'])[ind,:])
     dat['ampOfMS'] = dat['ampOfMS'] + ms['ampOfMS']
     dat['sTimeOfMS'] = dat['sTimeOfMS'] + ms['sTimeOfMS']
+    ms_events = ms_events+ev
 
-dat['ampOfMS'] = moving_avg(np.array(dat['ampOfMS']).copy(),cfg['SAMPLING_RATE'])
-dat['ampOfMS'] = re_sampling(dat['ampOfMS'] ,(cfg['TIME_END']-cfg['TIME_START'])*50).tolist()
-
+# dat['ampOfMS'] = moving_avg(np.array(dat['ampOfMS']).copy(),fs)
+# dat['ampOfMS'] = re_sampling(dat['ampOfMS'] ,(cfg['TIME_END']-cfg['TIME_START'])*int(fs/5)).tolist()
 
 gazeX = moving_avg(np.array(dat['gazeX']).copy(),cfg['SAMPLING_RATE'])
 gazeX = re_sampling(gazeX,(cfg['TIME_END']-cfg['TIME_START'])*100)
@@ -303,26 +304,36 @@ gazeY = re_sampling(gazeY,(cfg['TIME_END']-cfg['TIME_START'])*100)
 gazeX_p = np.mean(gazeX-center[0],axis=1)
 gazeY_p = np.mean(gazeY-center[1],axis=1)
 
+gazeX_p = pixel2angle(cfg['DOT_PITCH'],gazeX_p.tolist(),cfg['VISUAL_DISTANCE'])
+gazeY_p = pixel2angle(cfg['DOT_PITCH'],gazeY_p.tolist(),cfg['VISUAL_DISTANCE'])
+
 dat['gazeX'] = gazeX_p.tolist()
 dat['gazeY'] = gazeY_p.tolist()
 
-plt.figure()
-p = np.array(dat['ampOfMS']).mean(axis=0)
-plt.plot(p)
+# plt.figure()
+# p = np.array(dat['ampOfMS']).mean(axis=0)
+# plt.plot(p)
+# plt.plot(np.array(dat['ampOfMS'])[0,])
+
+# t = []
+# t.append(dat['endFix'][0]+dat['endFix'][1]+dat['endFix'][2]+dat['endFix'][3]+dat['endFix'][4]+dat['endFix'][5])
+# h = draw_heatmap(t, cfg['center'])
+
+# plt.imshow(np.nanmean(np.array(h),axis=0))
+
+# a = moving_avg(np.array(dat['ampOfMS']).copy(),50)
+# .tolist()
+# plt.figure()
+# plt.plot(np.array(dat['ampOfMS'])[0,:])
+# plt.plot(a[0,:])
 
 # plt.figure(figsize=(10,10))
-# tNum=1
-# for i,d in enumerate(events[tNum]):
-
-#     # if d[0] == 'x':
+# tNum=5
+# for i,d in enumerate(ms_events[tNum]):
 #     plt.subplot(3,5,i+1)
 #     plt.plot(d[-3],d[-2])
+#     # np.corrcoef(ms_events[tNum][3][-3],ms_events[tNum][4][-3])[0][1]
 #     plt.title(str(d[1])+'_'+d[0])
-    
-    # else:
-    #     plt.subplot(2,5,i+5)
-    #     plt.plot(d[-3],d[-2])
-    #     plt.title(str(d[1]))
 
 with open(os.path.join("./data/data20211124.json"),"w") as f:
         json.dump(dat,f)

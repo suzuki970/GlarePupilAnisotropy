@@ -1,7 +1,7 @@
 ---
-title: "Result notes"
+title: "Results' note"
 author: "Yuta Suzuki"
-date: "4/23/2021"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   word_document
   # slidy_presentation:
@@ -14,8 +14,9 @@ params:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r child="readFunc.Rmd"}
+```{r read function, child="readFunc.Rmd"}
 ```
+
 
 ## Article information
 
@@ -27,21 +28,31 @@ Novera Istiqomah, Yuta Suzuki, Yuya Kinzuka, Minami Tetsuto, Shigeki Nakauchi
 
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, include=FALSE}
-# source("makeDataSet.R")
+
+# make data set -----------------------------------------------------------------
+if(!file.exists("./data/dataset.rda")){
+  source("makeDataSet.R")
+}else{
+  load('./data/dataset.rda')
+}
 
 countFigNum = 1
 
+# file loading -----------------------------------------------------------------
 go1 <- c("Center","Upper","Lower","Left","Right")
-######## file loading ########
-load("./data/dataset20211124.rda")
 data_e1$Locs = factor(data_e1$Locs, go1)
+data_auc$Locs = factor(data_auc$Locs, go1)
+gaze_data$Locs = factor(gaze_data$Locs, go1)
+ind_data_timeCourseMS$Locs = factor(ind_data_timeCourseMS$Locs, go1)
+ind_data_ms$Locs = factor(ind_data_ms$Locs, go1)
+
 numOfSub = length(unique(data_e1$sub))
 sTime = -0.2
 eTime = max(data_e1$data_x)
 
 anovaTabAll = list()
 
-######## Figure 2A ########
+# Figure 2A -----------------------------------------------------------------
 data_e1_ave = aggregate( data_y ~ data_x*Locs*Pattern, data = data_e1, FUN = "mean")
 
 config = list(lim_x = c(sTime, eTime),
@@ -78,7 +89,7 @@ p = p +
 eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
 countFigNum = countFigNum+1
 
-
+# Supplementary Figure 1A (Center) -----------------------------------------------------------------
 data_e1_center = data_e1[data_e1$data_x >= 0 & data_e1$Locs == 'Center',]
 data_e1_center = aggregate( data_y ~ sub*data_x*Pattern, data = data_e1_center, FUN = "mean")
 data_e1_center = aggregate( data_y ~ sub*Pattern, data = data_e1_center, FUN = "mean")
@@ -98,14 +109,10 @@ names(center_table) <- c('center_table')
 
 anovaTabAll = c(anovaTabAll,center_table)
 
-######## MPCL ########
+# MPCL -----------------------------------------------------------------
 data_MPCL = aggregate( data_y ~ sub*data_x, data = data_e1, FUN = "mean")
-
 data_MPCL$sub = subName[data_MPCL$sub]
 
-# data_MPCL_v = aggregate( data_y ~ sub*data_x*minLatency, data = data_e1, FUN = "mean")
-# data_MPCL_v = data_MPCL_v[data_MPCL_v$data_x == data_MPCL_v$minLatency,]
-# data_MPCL_v$sub = subName[data_MPCL_v$sub]
 events_data$sub = subName[events_data$sub]
 events_data = events_data[events_data$tag == 'min',]
 p = ggplot(data_MPCL,aes(x=data_x,y=data_y,group=sub,color=sub)) +
@@ -128,8 +135,7 @@ p = setEmptyStyle(p,config)
 eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
 countFigNum = countFigNum+1
 
-
-#### gaze heatmap #### 
+# gaze heat map -----------------------------------------------------------------
 p = ggplot(gaze_data, aes(x=gazeX, y=gazeY,group = Locs) ) +
   stat_density_2d(aes(fill = ..density..), geom = "raster", contour = FALSE) +
   scale_fill_continuous(type = "viridis") +
@@ -148,17 +154,65 @@ p = setEmptyStyle(p,config)+
 eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
 countFigNum = countFigNum+1
 
-gaze_data_ave = aggregate( . ~ sub*Locs*Pattern, data = gaze_data, FUN = "mean")
-gaze_data_ave$data_y = gaze_data_ave$gazeY
+# micro-saccades polar plot -----------------------------------------------------------------
+# gaze_data_ave = aggregate( . ~ sub*Locs*Pattern, data = gaze_data, FUN = "mean")
+# gaze_data_ave$data_y = gaze_data_ave$gazeY
+for(iSub in unique(ind_data_ms$sub)){
+  ind = ind_data_ms[ind_data_ms$sub == iSub,]
+}
 
-p <- dispLineGraph(gaze_data_ave,config,c("Locs","Pattern"))+
-  facet_grid(. ~ Locs)
+h = tapply(ind_data_ms$data_y, 
+       list(ind_data_ms$Pattern,ind_data_ms$Locs,ind_data_ms$sub),
+       function(x){
+         return (hist(x, breaks=seq(0, 360, by=30),freq=F))
+         }
+       )
+x <- rnorm(1000)
+hist(x, freq = FALSE)
+
+h=hist(ind_data_ms$data_y,breaks=seq(0, 360, by=30),freq=FALSE)
+
+# p = ggplot(ind_data_ms, aes(x = DirCat, group = Locs,fill=Pattern)) +
+#   geom_histogram()
+# binwidth = 15, boundary = -15) +
+#   coord_polar(start = 1.57) +
+#   facet_grid(Pattern~Locs) +
+#   scale_x_continuous(breaks=seq(0, 360, by=30), expand=c(0,0), lim=c(0, 360))
+  # scale_x_continuous(limits = c(0,360))
+eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
+countFigNum = countFigNum+1
+
+# micro-saccades frequency -----------------------------------------------------------------
+config = list(lim_x = c(-0.2, eTime),
+              lim_y = c(0, 0.015),
+              alpha = 0.4,
+              stride = 0.1,
+              label_x = "Time [sec]",
+              label_y = "Pupil Changes [z-scored]",
+              title = "",
+              linetype = TRUE
+)
+
+timeCourseMS_ave = timeCourseMS_ave[order(timeCourseMS_ave$sub,
+                                          timeCourseMS_ave$Locs,
+                                          timeCourseMS_ave$Pattern),]
+  
+timeCourseMS_ave$data_y = unlist(tapply(timeCourseMS_ave$data_y, 
+       list(timeCourseMS_ave$Pattern,timeCourseMS_ave$Locs,timeCourseMS_ave$sub),
+       function(x){
+         return (rollmean(x, k = 20, fill = NA))
+         }
+       ))
+
+p <- disp(timeCourseMS_ave,config,1,c("Pattern","Locs"))+
+  facet_grid(Locs ~ .)
 
 eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
 countFigNum = countFigNum+1
 
 
 ```
+
 
 ## Figure 2
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=5, fig.width=13}
@@ -167,22 +221,33 @@ countFigNum = countFigNum+1
 # height_fig=3
 # CairoPDF(file="figure/fig3A",
 #          width=width_fig, height=height_fig)
-print(p1)
+for(iFig in 1:(countFigNum-1)){
+  eval(parse(text=paste("print(p",iFig,")",sep="")))
+}
+
 # dev.off()
 ```
-```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=8, fig.width=8}
-print(p2)
-```
-```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=8, fig.width=8}
-print(p3)
-```
+
+<!-- ```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=8, fig.width=8} -->
+<!-- print(p2) -->
+<!-- ``` -->
+<!-- ```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=8, fig.width=8} -->
+<!-- print(p3) -->
+<!-- ``` -->
 
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, include=FALSE}
 
+# make data set -----------------------------------------------------------------
+if(!file.exists("./data/dataset.rda")){
+  source("makeDataSet.R")
+}else{
+  load('./data/dataset.rda')
+}
+
 countFigNum = 1
-load("./data/dataset20211124.rda")
-######## Figure 2A ########
+
+# Figure 2A -----------------------------------------------------------------
 data_auc$Locs = factor(data_auc$Locs, go1)
 data_center = data_auc[data_auc$Locs == 'Center',]
 
@@ -196,7 +261,7 @@ config = list(
   gr_outline =  rep(c("black","black"),5)
 )
 
-#### Figure 3A (center early) #### 
+# Figure 3A (center early) --------------------------------------------------
 tmp = data_center[data_center$comp == 'Early',]
 x = tmp[tmp$Pattern == 'Glare',]$data_y
 y = tmp[tmp$Pattern == 'Control',]$data_y
@@ -490,9 +555,6 @@ $p$ = `r round(anovaTabAll[["center_late_table"]][["anovaTab"]][["p.value"]],3)`
 Cohen’s  $d_z$ = `r anovaTabAll[["center_late_table"]][["cohend"]]`, 
 $BF_{10}$ =  `r anovaTabAll[["center_late_table"]][["bf"]]`)
 
-
-
-
 <!-- There was no significant main effect on the pattern   -->
 <!-- ($F$(`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['df.col'],3)`,  -->
 <!-- `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][3,]['df.col'],3)`) =  -->
@@ -515,29 +577,6 @@ $BF_{10}$ =  `r anovaTabAll[["center_late_table"]][["bf"]]`)
 
 ## Figure 3
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=5, fig.width=13}
-
-p = ggplot(ind_data_ms, aes(x = DirCat, group = Locs,fill=Pattern)) +
-  geom_histogram(binwidth = 15, boundary = -15) +
-  coord_polar(start = 1.57) +
-  facet_grid(Pattern~Locs) +
-  scale_x_continuous(breaks=seq(0, 360, by=30), expand=c(0,0), lim=c(0, 360))
-  # scale_x_continuous(limits = c(0,360))
-
-config = list(lim_x = c(sTime, eTime),
-              lim_y = c(0, 0.05),
-              alpha = 0.4,
-              stride = 0.1,
-              label_x = "Time [sec]",
-              label_y = "Pupil Changes [z-scored]",
-              title = "",
-              linetype = FALSE
-              # grCol = rep(c("#101010","#101010"),10),
-              # gr_outline =  rep(c("#101010","#101010"),10)
-)
-
-p <- disp(ind_data_timeCourseMS,config,1,c("Pattern","Locs"))+
-  facet_grid(Pattern ~ Locs)
-
 # p = combineGraphs(seq(1,2),'p',NULL)
 # width_fig=5
 # height_fig=3

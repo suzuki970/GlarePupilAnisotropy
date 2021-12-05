@@ -1,5 +1,5 @@
 
-############### generate dataset file ################
+# params setting ------------------------------
 sTime = -1
 eTime = 4
 timeLen = c(sTime,eTime)
@@ -13,7 +13,7 @@ g2 <- rep(c("Glare","Control"), times=c(5,5))
 go1 <- c("Upper","Lower","Center","Left","Right")
 go2 <- c("Glare","Control")
 
-# ################ making dataset for e1 ##################
+# micro-saccades ------------------------------
 data=fromJSON(file="../[python]pre_processing/data/data20211124.json")
 
 ind_data_ms = data.frame()
@@ -47,8 +47,23 @@ ind_data_timeCourseMS <- data.frame(
   Pattern = rep(g2[data$condition], times = rep( lengthOfTime, numOfTrial))
 )
 
-ind_data_timeCourseMS = aggregate( data_y ~ sub*data_x*Locs*Pattern, data = ind_data_timeCourseMS, FUN = "mean")
+timeCourseMS_ave = aggregate( data_y ~ sub*data_x*Locs*Pattern, data = ind_data_timeCourseMS, FUN = "mean")
 
+# gaze ------------------------------
+gaze_data = data.frame(
+  sub = data$sub,
+  Locs = g1[data$condition],
+  Pattern = g2[data$condition],
+  gazeX = data$gazeX,
+  gazeY = data$gazeY
+)
+
+gaze_data$numOfTrial = 0
+for(iSub in unique(gaze_data$sub)){
+  gaze_data[gaze_data$sub == iSub,]$numOfTrial = 1:dim(gaze_data[gaze_data$sub == iSub,])[1]
+}
+
+# pupil ------------------------------
 dat <- list((matrix(unlist(data$PDR),nrow=length(data$PDR),byrow=T)),
             t(unlist(data$sub)),
             t(unlist(data$condition)))
@@ -70,21 +85,7 @@ for(iSub in 1:length(data$events)){
   ))
 }
 
-#### gaze ####
-gaze_data = data.frame(
-  sub = data$sub,
-  Locs = g1[data$condition],
-  Pattern = g2[data$condition],
-  gazeX = data$gazeX,
-  gazeY = data$gazeY
-)
-
-gaze_data$numOfTrial = 0
-for(iSub in unique(gaze_data$sub)){
-  gaze_data[gaze_data$sub == iSub,]$numOfTrial = 1:dim(gaze_data[gaze_data$sub == iSub,])[1]
-}
-
-#### AUC ####
+# AUC ------------------------------
 data_e1$Locs = factor(data_e1$Locs, go1)
 numOfSub = length(unique(data_e1$sub))
 
@@ -117,8 +118,8 @@ for(iSub in unique(data_e1$sub)){
   }
 }
 
-# save(data_auc,file = "./data/data_auc20211124.rda")
+# save data ------------------------------
 save(data_e1,data_auc,
      events_data,gaze_data,
-     ind_data_timeCourseMS,ind_data_ms,
+     ind_data_timeCourseMS,timeCourseMS_ave,ind_data_ms,
      file = "./data/dataset20211124.rda")
