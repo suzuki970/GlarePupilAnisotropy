@@ -515,6 +515,29 @@ $BF_{10}$ =  `r anovaTabAll[["center_late_table"]][["bf"]]`)
 
 ## Figure 3
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, fig.height=5, fig.width=13}
+
+p = ggplot(ind_data_ms, aes(x = DirCat, group = Locs,fill=Pattern)) +
+  geom_histogram(binwidth = 15, boundary = -15) +
+  coord_polar(start = 1.57) +
+  facet_grid(Pattern~Locs) +
+  scale_x_continuous(breaks=seq(0, 360, by=30), expand=c(0,0), lim=c(0, 360))
+  # scale_x_continuous(limits = c(0,360))
+
+config = list(lim_x = c(sTime, eTime),
+              lim_y = c(0, 0.05),
+              alpha = 0.4,
+              stride = 0.1,
+              label_x = "Time [sec]",
+              label_y = "Pupil Changes [z-scored]",
+              title = "",
+              linetype = FALSE
+              # grCol = rep(c("#101010","#101010"),10),
+              # gr_outline =  rep(c("#101010","#101010"),10)
+)
+
+p <- disp(ind_data_timeCourseMS,config,1,c("Pattern","Locs"))+
+  facet_grid(Pattern ~ Locs)
+
 # p = combineGraphs(seq(1,2),'p',NULL)
 # width_fig=5
 # height_fig=3

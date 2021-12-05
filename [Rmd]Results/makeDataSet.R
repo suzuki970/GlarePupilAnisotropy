@@ -37,32 +37,17 @@ numOfTrial = dim(dat$y)[1]
 numOfSub = length(unique(dat$sub))
 lengthOfTime = dim(dat$y)[2]
 
-sTime = timeLen[1]
-eTime = timeLen[2]
-
 x = seq(sTime,eTime,length=lengthOfTime)
 
-ind_data <- data.frame(
-  sub =  rep( dat$sub, times = rep( lengthOfTime, numOfTrial)),
+ind_data_timeCourseMS <- data.frame(
+  sub =  rep( data$sub, times = rep( lengthOfTime, numOfTrial)),
   data_y = t(matrix(t(dat$y),nrow=1)),
-  data_x = x
-)
-ind_data_timeCourseMS = data.frame(
-  sub = rep(data$sub[iTrial],numOfMS),
-  Locs = rep(g1[data$condition[iTrial]],numOfMS),
-  Pattern = rep(g2[data$condition[iTrial]],numOfMS),
-  data_y = data[["sTimeOfMS"]][[iTrial]]
+  data_x = x,
+  Locs = rep(g1[data$condition], times = rep( lengthOfTime, numOfTrial)),
+  Pattern = rep(g2[data$condition], times = rep( lengthOfTime, numOfTrial))
 )
 
-# data_ms_ave = aggregate( data_y ~ sub*Locs*Pattern, data = ind_data_ms, FUN = "mean")
-
-p = ggplot(ind_data_ms, aes(x = DirCat, group = Locs,fill=Pattern)) +
-  geom_histogram(binwidth = 15, boundary = -15) +
-  coord_polar(start = 1.57) +
-  facet_grid(Pattern~Locs) +
-  scale_x_continuous(breaks=seq(0, 360, by=30), expand=c(0,0), lim=c(0, 360))
-  # scale_x_continuous(limits = c(0,360))
-
+ind_data_timeCourseMS = aggregate( data_y ~ sub*data_x*Locs*Pattern, data = ind_data_timeCourseMS, FUN = "mean")
 
 dat <- list((matrix(unlist(data$PDR),nrow=length(data$PDR),byrow=T)),
             t(unlist(data$sub)),
@@ -93,6 +78,7 @@ gaze_data = data.frame(
   gazeX = data$gazeX,
   gazeY = data$gazeY
 )
+
 gaze_data$numOfTrial = 0
 for(iSub in unique(gaze_data$sub)){
   gaze_data[gaze_data$sub == iSub,]$numOfTrial = 1:dim(gaze_data[gaze_data$sub == iSub,])[1]
@@ -133,4 +119,6 @@ for(iSub in unique(data_e1$sub)){
 
 # save(data_auc,file = "./data/data_auc20211124.rda")
 save(data_e1,data_auc,
-     events_data,gaze_data,file = "./data/dataset20211124.rda")
+     events_data,gaze_data,
+     ind_data_timeCourseMS,ind_data_ms,
+     file = "./data/dataset20211124.rda")

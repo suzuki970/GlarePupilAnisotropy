@@ -104,9 +104,6 @@ gazeY_p = np.mean(gazeY-center[1],axis=1)
 gazeX_p=pixel2angle(cfg['DOT_PITCH'],gazeX_p.tolist(),cfg['VISUAL_DISTANCE'])
 gazeY_p=pixel2angle(cfg['DOT_PITCH'],gazeY_p.tolist(),cfg['VISUAL_DISTANCE'])
 
-# dat['gazeX'] = gazeX_p.tolist()
-# dat['gazeY'] = gazeY_p.tolist()
-
 gazeX = np.mean(gazeX-center[0],axis=1)
 gazeY = np.mean(gazeY-center[1],axis=1)
 
@@ -292,7 +289,23 @@ for iSub in np.unique(dat['sub']):
     ev,ms = makeMicroSaccade(cfg,np.array(dat['gazeX'])[ind,:],np.array(dat['gazeY'])[ind,:])
     dat['ampOfMS'] = dat['ampOfMS'] + ms['ampOfMS']
     dat['sTimeOfMS'] = dat['sTimeOfMS'] + ms['sTimeOfMS']
-    
+
+dat['ampOfMS'] = moving_avg(np.array(dat['ampOfMS']).copy(),cfg['SAMPLING_RATE'])
+dat['ampOfMS'] = re_sampling(dat['ampOfMS'] ,(cfg['TIME_END']-cfg['TIME_START'])*50).tolist()
+
+
+gazeX = moving_avg(np.array(dat['gazeX']).copy(),cfg['SAMPLING_RATE'])
+gazeX = re_sampling(gazeX,(cfg['TIME_END']-cfg['TIME_START'])*100)
+
+gazeY = moving_avg(np.array(dat['gazeY']).copy(),cfg['SAMPLING_RATE'])
+gazeY = re_sampling(gazeY,(cfg['TIME_END']-cfg['TIME_START'])*100)
+
+gazeX_p = np.mean(gazeX-center[0],axis=1)
+gazeY_p = np.mean(gazeY-center[1],axis=1)
+
+dat['gazeX'] = gazeX_p.tolist()
+dat['gazeY'] = gazeY_p.tolist()
+
 plt.figure()
 p = np.array(dat['ampOfMS']).mean(axis=0)
 plt.plot(p)
