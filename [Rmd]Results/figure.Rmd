@@ -223,6 +223,11 @@ for(iFig in 1:(countFigNum-1)){
   dev.off()
 }
 
+print(p1)
+print(p2)
+print(p3)
+print(p4)
+
 # width_fig=10
 # height_fig=6
 # 
@@ -446,6 +451,10 @@ for(iFig in 1:(countFigNum-1)){
   eval(parse(text=paste("print(p",iFig,")",sep="")))
   dev.off()
 }
+print(p1)
+print(p2)
+print(p3)
+print(p4)
 
 # p = combineGraphs(seq(1,2),'p',NULL)
 # width_fig=5
@@ -467,7 +476,8 @@ Cohen’s  $d_z$ = `r anovaTabAll[["center_table"]][["cohend"]]`,
 $BF_{10}$ =  `r anovaTabAll[["center_table"]][["bf"]]`)
 
 To assess temporal component of papillary response, the early component corresponded to peak pupil constriction after stimulus onset and the late comportment which was defined by are under the curve (AUC) were calculated (see Method). In early component (Fig 3B), pupil constriction to the glare illusion was larger than control pattern as the previous analysis 
-The two-way repeated measures ANOVA revealed a significant main effect on the pattern and VF locations ($F$(`r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][4,]['df.col'],3)`, 
+The two-way repeated measures ANOVA revealed a significant main effect on the pattern and VF locations 
+($F$(`r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][4,]['df.col'],3)`, 
 `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][5,]['df.col'],3)`) = 
 `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][4,]['f.col'],3)`, 
 p = `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][4,]['p.col'],3)`, 

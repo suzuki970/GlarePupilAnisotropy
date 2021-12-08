@@ -52,10 +52,8 @@ for iSub,subName in enumerate(folderName):
     dat=[]
     for line in f.readlines():
         dat.append(line.split())
-        
     f.close()
 
-    # eyeData,events,initialTimeVal,fs = asc2array(dat, 2, mmFlag, normFlag, 'SYNCTIME')
     eyeData,events,initialTimeVal,fs = asc2array(dat, cfg)
     
     pupilData = eyeData['pupilData']
@@ -69,21 +67,20 @@ for iSub,subName in enumerate(folderName):
     events_onset =  [[int((int(e[0]) - initialTimeVal)*coef),e[1]] for e in events['MSG'] if e[1] == 'Presentation']
     events_offset = [[int((int(e[0]) - initialTimeVal)*coef),e[1]] for e in events['MSG'] if e[1] == 'InterStim']
      
-    print('sub = '+ str(subName[-3:]))
-    print('length = '+ str(len(events_onset)))
+    # print('sub = '+ str(subName[-3:]))
+    # print('length = '+ str(len(events_onset)))
     endFix = [e[1:6] for e in events['EFIX'] ]
-    endISI = [[int(int(e[0])- initialTimeVal),e[1]] for e in events['MSG'] if e[1] == 'InterStim']
     
-    ### for heatmap, blink and saccade
+    #%% for heatmap, blink and saccade
     event_data = {'EFIX':[],'ESACC':[],'EBLINK':[]}
     mmName = list(event_data.keys())
     for mm in mmName:
         for i in np.arange(len(events_onset)):       
             tmp = []
             for e in events[mm]:
-                if (int(e[1])-initialTimeVal)*coef > events_onset[i][0] and (int(e[1])-initialTimeVal)*coef < events_offset[i][0]:
-                    if e[0] == 'L':
-                        tmp.append(e[1:])
+                if (int(e[1])-initialTimeVal)*coef > fix_onset[i][0] and (int(e[1])-initialTimeVal)*coef < events_offset[i][0]:
+                    # if e[0] == 'L':
+                    tmp.append(e[1:])
                             
             event_data[mm].append(tmp)
             

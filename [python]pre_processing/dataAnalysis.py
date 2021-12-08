@@ -26,12 +26,13 @@ cfg={
 'WID_BASELINE':np.array([-0.2,0]),
 'WID_FILTER':np.array([]),
 'METHOD':1, #subtraction
-'FLAG_LOWPASS':False
+'FLAG_LOWPASS':False,
+'THRES_DIFF':0.05
 }
 
 saveFileLocs = './data/'
 
-cfg['THRES_DIFF'] = 0.1 if cfg['METHOD'] == 1 else 0.1 ## mm
+# cfg['THRES_DIFF'] = 0.1 if cfg['METHOD'] == 1 else 0.1 ## mm
 
 f = open(os.path.join(str('./data/data_original.json')))
 dat = json.load(f)
@@ -65,10 +66,10 @@ plt.xlabel('Time from response queue')
 plt.ylabel('Changes in pupil size')
 
 #%% ###  PCA ##########################
-# pca_x,pca_y,rejectNumPCA = rejectBlink_PCA(y)
-# y = np.delete(y,rejectNumPCA,axis=0)
-# for mm in mmName:
-#     dat[mm] = [d for i,d in enumerate(dat[mm]) if not i in rejectNumPCA]
+pc,rejectNumPCA = rejectBlink_PCA(y)
+y = np.delete(y,rejectNumPCA,axis=0)
+for mm in mmName:
+    dat[mm] = [d for i,d in enumerate(dat[mm]) if not i in rejectNumPCA]
 
 #%% ###  rejection of outlier(interplation failed trial) #########
 # max_val = [max(abs(y[i,])) for i in np.arange(y.shape[0])]
@@ -82,30 +83,43 @@ plt.ylabel('Changes in pupil size')
 # for mm in mmName:
 #     dat[mm] = [d for i,d in enumerate(dat[mm]) if not i in rejectOutlier]
          
-# y = re_sampling(y,250)
-# gazeX = re_sampling(np.array(dat['gazeX']),250)
-# gazeY = re_sampling(np.array(dat['gazeY']),250)
+#%% ### reject gaze position ###
 gazeX = np.array(dat['gazeX'])
 gazeY = np.array(dat['gazeY'])
-
-#%% ### reject gaze position ###
 rangeWin = pixel_size(cfg['DOT_PITCH'],cfg['acceptMSRange'],cfg['VISUAL_DISTANCE'])
 center = np.array(cfg['center'])/2
 
-gazeX = moving_avg(np.array(dat['gazeX']).copy(),cfg['SAMPLING_RATE'])
-gazeX = re_sampling(gazeX,(cfg['TIME_END']-cfg['TIME_START'])*100)
+gazeX = []
+gazeY = []
+for fixTrial in dat['endFix']:
+    tmp_gx=[]
+    tmp_gy=[]
+    for gx in fixTrial:
+        tmp_gx.append(float(gx[3]))
+        tmp_gy.append(float(gx[4]))
+    gazeX.append(np.mean(tmp_gx))
+    gazeY.append(np.mean(tmp_gy))
 
-gazeY = moving_avg(np.array(dat['gazeY']).copy(),cfg['SAMPLING_RATE'])
-gazeY = re_sampling(gazeY,(cfg['TIME_END']-cfg['TIME_START'])*100)
+gazeX = np.array(gazeX)-center[0]
+gazeY = np.array(gazeY)-center[1]
 
-gazeX_p = np.mean(gazeX-center[0],axis=1)
-gazeY_p = np.mean(gazeY-center[1],axis=1)
+gazeX_p = np.array(gazeX)-center[0]
+gazeY_p = np.array(gazeY)-center[1]
 
-gazeX_p=pixel2angle(cfg['DOT_PITCH'],gazeX_p.tolist(),cfg['VISUAL_DISTANCE'])
-gazeY_p=pixel2angle(cfg['DOT_PITCH'],gazeY_p.tolist(),cfg['VISUAL_DISTANCE'])
+# gazeX = moving_avg(np.array(dat['gazeX']).copy(),cfg['SAMPLING_RATE'])
+# gazeX = re_sampling(gazeX,(cfg['TIME_END']-cfg['TIME_START'])*100)
 
-gazeX = np.mean(gazeX-center[0],axis=1)
-gazeY = np.mean(gazeY-center[1],axis=1)
+# gazeY = moving_avg(np.array(dat['gazeY']).copy(),cfg['SAMPLING_RATE'])
+# gazeY = re_sampling(gazeY,(cfg['TIME_END']-cfg['TIME_START'])*100)
+
+# gazeX_p = np.mean(gazeX-center[0],axis=1)
+# gazeY_p = np.mean(gazeY-center[1],axis=1)
+
+# gazeX_p=pixel2angle(cfg['DOT_PITCH'],gazeX_p.tolist(),cfg['VISUAL_DISTANCE'])
+# gazeY_p=pixel2angle(cfg['DOT_PITCH'],gazeY_p.tolist(),cfg['VISUAL_DISTANCE'])
+
+# gazeX = np.mean(gazeX-center[0],axis=1)
+# gazeY = np.mean(gazeY-center[1],axis=1)
 
 a = rangeWin**2
 b = rangeWin**2
@@ -123,6 +137,12 @@ e = patches.Ellipse(xy=(0,0), width=rangeWin*2, height=rangeWin*2, fill=False, e
 ax.add_patch(e)
 plt.plot(gazeX,gazeY,'.')
 plt.plot(gazeX[rejectGaze],gazeY[rejectGaze],'r.')
+plt.axis('equal')
+plt.xlim([-rangeWin-20,rangeWin+20])
+plt.ylim([-rangeWin-20,rangeWin+20])
+
+rejectGaze2 = np.argwhere(np.isnan(gazeX_p)).reshape(-1)
+rejectGaze = np.unique(np.r_[rejectGaze,rejectGaze2])
 
 y = np.delete(y,rejectGaze,axis=0)
 for mm in mmName:
@@ -147,7 +167,6 @@ print('# of trials = ' + str(numOftrials))
 print('Averaged # of trials = ' + str(np.round(np.mean(numOftrials),2)))
 print('SD # of trials = ' + str(np.round(np.std(numOftrials),2)))
 
-
 # from scipy.stats import gamma
 # import scipy.stats as stats
 
@@ -168,6 +187,7 @@ th = np.round(np.std(rejectedTrial),2)
 
 rejectSub = [i for i,d in enumerate(dat['sub']) if d in reject]
 print('rejected subject = ' + str(reject))
+
 y = np.delete(y,rejectSub,axis=0)
 for mm in mmName:
     dat[mm] = [d for i,d in enumerate(dat[mm]) if not i in rejectSub]
@@ -187,6 +207,8 @@ events = {'sub':[],
 
 for iSub in np.unique(dat['sub']):
     for iCond in np.unique(dat['condition']):
+    # for iCond in [1,2,4,5,6,7,9,10]:
+    # for iCond in [3,8]:
         
         ind = np.argwhere((dat['sub'] == iSub ) &
                           (dat['condition'] == np.int64(iCond) )).reshape(-1)
@@ -205,6 +227,7 @@ dat['events'] = []
 dat['events_p'] = []
 
 x_t = x[np.argwhere((x>time_min) & (x<time_max))]
+
 for iSub in np.unique(dat['sub']):
      ind = np.argwhere((events['sub'] == iSub)).reshape(-1)
      
@@ -258,7 +281,7 @@ print('The MPCL was = ' + str(round(np.mean(np.array(dat['min'])),3)) +
       's, sd = ' + str(round(np.std(np.array(dat['min'])),3)) + 's')
 
 
-## ################## figure plot ##########################
+#%% ################## figure plot ##########################
 # plt.rcParams["font.size"] = 18
 # # 1: top glare, 2: bottom glare, 3: center glare, 4: left glare, 5: right glare; 6: top control, 7: bottom control, 8: center control, 9: left control, 10: right control.
 # conditionName = ['glare top' ,'glare bottom','glare center','glare left','glare right',
@@ -295,15 +318,29 @@ for iSub in np.unique(dat['sub']):
 # dat['ampOfMS'] = moving_avg(np.array(dat['ampOfMS']).copy(),fs)
 # dat['ampOfMS'] = re_sampling(dat['ampOfMS'] ,(cfg['TIME_END']-cfg['TIME_START'])*int(fs/5)).tolist()
 
-gazeX = moving_avg(np.array(dat['gazeX']).copy(),cfg['SAMPLING_RATE'])
-gazeX = re_sampling(gazeX,(cfg['TIME_END']-cfg['TIME_START'])*100)
+# gazeX = moving_avg(np.array(dat['gazeX']).copy(),cfg['SAMPLING_RATE'])
+# gazeX = re_sampling(gazeX,(cfg['TIME_END']-cfg['TIME_START'])*100)
 
-gazeY = moving_avg(np.array(dat['gazeY']).copy(),cfg['SAMPLING_RATE'])
-gazeY = re_sampling(gazeY,(cfg['TIME_END']-cfg['TIME_START'])*100)
+# gazeY = moving_avg(np.array(dat['gazeY']).copy(),cfg['SAMPLING_RATE'])
+# gazeY = re_sampling(gazeY,(cfg['TIME_END']-cfg['TIME_START'])*100)
 
-gazeX_p = np.mean(gazeX-center[0],axis=1)
-gazeY_p = np.mean(gazeY-center[1],axis=1)
+# gazeX_p = np.mean(gazeX-center[0],axis=1)
+# gazeY_p = np.mean(gazeY-center[1],axis=1)
 
+
+gazeX = []
+gazeY = []
+for fixTrial in dat['endFix']:
+    tmp_gx=[]
+    tmp_gy=[]
+    for gx in fixTrial:
+        tmp_gx.append(float(gx[3]))
+        tmp_gy.append(float(gx[4]))
+    gazeX.append(np.mean(tmp_gx))
+    gazeY.append(np.mean(tmp_gy))
+
+gazeX_p = np.array(gazeX)-center[0]
+gazeY_p = np.array(gazeY)-center[1]
 gazeX_p = pixel2angle(cfg['DOT_PITCH'],gazeX_p.tolist(),cfg['VISUAL_DISTANCE'])
 gazeY_p = pixel2angle(cfg['DOT_PITCH'],gazeY_p.tolist(),cfg['VISUAL_DISTANCE'])
 
