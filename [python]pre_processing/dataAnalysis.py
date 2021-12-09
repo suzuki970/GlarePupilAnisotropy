@@ -32,8 +32,6 @@ cfg={
 
 saveFileLocs = './data/'
 
-# cfg['THRES_DIFF'] = 0.1 if cfg['METHOD'] == 1 else 0.1 ## mm
-
 f = open(os.path.join(str('./data/data_original.json')))
 dat = json.load(f)
 f.close()
