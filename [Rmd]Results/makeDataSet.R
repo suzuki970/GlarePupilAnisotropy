@@ -14,7 +14,7 @@ go1 <- c("Upper","Lower","Center","Left","Right")
 go2 <- c("Glare","Control")
 
 # micro-saccades ------------------------------
-data=fromJSON(file="../[python]pre_processing/data/data20211124.json")
+data=fromJSON(file="../[python]pre_processing/data/data20211124_f.json")
 
 ind_data_ms = data.frame()
 for(iTrial in 1:length(data[["sTimeOfMS"]])){

@@ -9,6 +9,11 @@ import warnings
 import matplotlib.patches as patches
 import pandas as pd
 from makeEyemetrics import makeMicroSaccade,draw_heatmap
+from zeroInterp import zeroInterp
+from tqdm import tqdm
+
+# from scipy.stats import gamma
+# import scipy.stats as stats
 
 warnings.simplefilter('ignore')
 
@@ -18,7 +23,8 @@ cfg={
 'center':[1920, 1080],  
 'DOT_PITCH':0.369,   
 'VISUAL_DISTANCE':80,   
-'acceptMSRange':2.81,   
+'acceptMSRange':2.81,
+# 'acceptMSRange':3,
 'windowL':10,
 'TIME_START':-1,
 'TIME_END':4,
@@ -27,7 +33,7 @@ cfg={
 'WID_FILTER':np.array([]),
 'METHOD':1, #subtraction
 'FLAG_LOWPASS':False,
-'THRES_DIFF':0.05
+'THRES_DIFF':0.04
 }
 
 saveFileLocs = './data/'
@@ -38,11 +44,18 @@ f.close()
 
 mmName = list(dat.keys())
 
+# v = np.diff(np.array(dat['PDR'])).reshape(-1)
+# plt.hist(v,bins=100)
+# sigma = np.nanstd(v)
+# ramda = 6
+# upsilon = ramda*sigma
+   
 y,rejectNum = pre_processing(np.array(dat['PDR']),cfg)
 y = np.delete(y,rejectNum,axis=0)
 
 for mm in mmName:
     dat[mm] = [d for i,d in enumerate(dat[mm]) if not i in rejectNum]
+
 
 #%% ###  figure plot ##########################
 x = np.linspace(cfg['TIME_START'],cfg['TIME_END'],y.shape[1])
@@ -82,36 +95,87 @@ for mm in mmName:
 #     dat[mm] = [d for i,d in enumerate(dat[mm]) if not i in rejectOutlier]
          
 #%% ### reject gaze position ###
+
 gazeX = np.array(dat['gazeX'])
 gazeY = np.array(dat['gazeY'])
+
+gazeX = zeroInterp(gazeX.copy(),cfg['SAMPLING_RATE'],5)
+gazeX = gazeX['pupilData'][:,cfg['SAMPLING_RATE']:]
+
+gazeY = zeroInterp(gazeY.copy(),cfg['SAMPLING_RATE'],5)
+gazeY = gazeY['pupilData'][:,cfg['SAMPLING_RATE']:]
+
+gv = [list(np.gradient(g)*cfg['SAMPLING_RATE']) for g in gazeX.tolist()]
+gacc = [list(np.gradient(np.gradient(g))*(cfg['SAMPLING_RATE']**2)) for g in gazeX.tolist()]
+
+thFix = pixel_size(cfg['DOT_PITCH'],30,cfg['VISUAL_DISTANCE'])  # changes in velocity of x > 30°/sec
+thAccFix = thFix*400   # changes in acceration of x > 1200°/sec
+
+endFix = []
+for iTrial,d in enumerate(tqdm(dat['endFix'])):
+    # if len(d)==0:
+    sigma = np.std(gv[iTrial])
+    sigma = sigma*3
+    
+    sigma_acc = np.std(gacc[iTrial])
+    sigma_acc = sigma_acc*3
+    
+    ind = np.argwhere(abs(np.array(gv[iTrial])) > sigma).reshape(-1)
+    ind_acc = np.argwhere(abs(np.array(gacc[iTrial])) > sigma_acc).reshape(-1)
+    # ind_acc = ind_acc[np.argwhere(np.diff(np.r_[0, ind_acc]) > 10)].reshape(-1)
+    # ind = np.unique(np.r_[ind,ind_acc])
+    if len(ind) > 0:
+        if np.max(np.diff(np.r_[0, ind])) > 1:
+            eFixTime = ind[np.argwhere(np.diff(np.r_[0, ind]) > 10)].reshape(-1)
+            if len(eFixTime) == 0:
+                eFixTime = ind[0]
+            eFixTime = np.r_[eFixTime,len(gv[iTrial])]
+        
+            sFixTime = ind[np.r_[np.argwhere(np.diff(np.r_[0, ind]) > 10)[1:].reshape(-1)-1,len(ind)-1]]
+            sFixTime = np.r_[0,sFixTime]
+            
+            tmp_endFix = []
+            for iFix in np.arange(len(sFixTime)):
+                tmp_endFix.append([0,0,0,
+                                   gazeX[iTrial,np.arange(sFixTime[iFix],eFixTime[iFix])].mean(),
+                                   gazeY[iTrial,np.arange(sFixTime[iFix],eFixTime[iFix])].mean(),
+                                   0])
+        else:
+            sFixTime = ind[0].tolist()
+            eFixTime = ind[-1].tolist()
+            tmp_endFix.append([0,0,0,
+                          gazeX[iTrial,np.arange(sFixTime,eFixTime)].mean(),
+                          gazeY[iTrial,np.arange(sFixTime,eFixTime)].mean(),
+                          0])
+            
+        dat['endFix'][iTrial] = tmp_endFix
+    else:
+        dat['endFix'][iTrial] = []
+        # endFix.append(tmp_endFix)
+    
 rangeWin = pixel_size(cfg['DOT_PITCH'],cfg['acceptMSRange'],cfg['VISUAL_DISTANCE'])
 center = np.array(cfg['center'])/2
 
 gazeX = []
 gazeY = []
-for fixTrial in dat['endFix']:
+for iTrial,fixTrial in enumerate(dat['endFix']):
     tmp_gx=[]
     tmp_gy=[]
-    for gx in fixTrial:
-        tmp_gx.append(float(gx[3]))
-        tmp_gy.append(float(gx[4]))
-    gazeX.append(np.mean(tmp_gx))
-    gazeY.append(np.mean(tmp_gy))
+    if len(fixTrial)>0:
+        for gx in fixTrial:
+            tmp_gx.append(float(gx[3]))
+            tmp_gy.append(float(gx[4]))
+        gazeX.append(np.mean(tmp_gx))
+        gazeY.append(np.mean(tmp_gy))
+    else:
+        gazeX.append(0)
+        gazeY.append(0)
+        
+gazeX = np.array(gazeX)-np.array(dat['gazeX']).mean(axis=1)
+gazeY = np.array(gazeY)-np.array(dat['gazeY']).mean(axis=1)
 
-gazeX = np.array(gazeX)-center[0]
-gazeY = np.array(gazeY)-center[1]
-
-gazeX_p = np.array(gazeX)-center[0]
-gazeY_p = np.array(gazeY)-center[1]
-
-# gazeX = moving_avg(np.array(dat['gazeX']).copy(),cfg['SAMPLING_RATE'])
-# gazeX = re_sampling(gazeX,(cfg['TIME_END']-cfg['TIME_START'])*100)
-
-# gazeY = moving_avg(np.array(dat['gazeY']).copy(),cfg['SAMPLING_RATE'])
-# gazeY = re_sampling(gazeY,(cfg['TIME_END']-cfg['TIME_START'])*100)
-
-# gazeX_p = np.mean(gazeX-center[0],axis=1)
-# gazeY_p = np.mean(gazeY-center[1],axis=1)
+# gazeX_p = np.array(gazeX)-center[0]
+# gazeY_p = np.array(gazeY)-center[1]
 
 # gazeX_p=pixel2angle(cfg['DOT_PITCH'],gazeX_p.tolist(),cfg['VISUAL_DISTANCE'])
 # gazeY_p=pixel2angle(cfg['DOT_PITCH'],gazeY_p.tolist(),cfg['VISUAL_DISTANCE'])
@@ -139,17 +203,16 @@ plt.axis('equal')
 plt.xlim([-rangeWin-20,rangeWin+20])
 plt.ylim([-rangeWin-20,rangeWin+20])
 
-rejectGaze2 = np.argwhere(np.isnan(gazeX_p)).reshape(-1)
+rejectGaze2 = np.argwhere(np.isnan(gazeX)).reshape(-1)
 rejectGaze = np.unique(np.r_[rejectGaze,rejectGaze2])
 
 y = np.delete(y,rejectGaze,axis=0)
 for mm in mmName:
     dat[mm] = [d for i,d in enumerate(dat[mm]) if not i in rejectGaze]
-         
+
 dat['PDR'] = y.tolist()
 
 #%% ### participants reject ###
-
 reject=[]
 NUM_TRIAL = 150
 numOftrials = []
@@ -164,9 +227,6 @@ for iSub in np.arange(1,int(max(dat['sub']))+1):
 print('# of trials = ' + str(numOftrials))
 print('Averaged # of trials = ' + str(np.round(np.mean(numOftrials),2)))
 print('SD # of trials = ' + str(np.round(np.std(numOftrials),2)))
-
-# from scipy.stats import gamma
-# import scipy.stats as stats
 
 n, bins, patches = plt.hist(np.array(rejectedTrial))
 # a_hat, loc_hat, scale_hat = gamma.fit(n)
@@ -196,7 +256,7 @@ ave = np.array(rejectedTrial)/NUM_TRIAL
 print('rejected num ave = ' + str(round(np.mean(ave),3)) + ', sd = ' + str(round(np.std(ave),3)))
 
 
-#%% ##### PC events #############################################
+#%% PC events -------------------------------------------
 events = {'sub':[],
           'condition':[],
           'PDR':[],
@@ -205,20 +265,18 @@ events = {'sub':[],
 
 for iSub in np.unique(dat['sub']):
     for iCond in np.unique(dat['condition']):
-    # for iCond in [1,2,4,5,6,7,9,10]:
-    # for iCond in [3,8]:
-        
         ind = np.argwhere((dat['sub'] == iSub ) &
                           (dat['condition'] == np.int64(iCond) )).reshape(-1)
-        tmp_y = y[ind,:].mean(axis=0)
+        tmp_y = y[ind,:]
+        tmp_y = moving_avg(tmp_y, 10)
+        tmp_y = tmp_y.mean(axis=0)
         
-        tmp_y = moving_avg(tmp_y, 10).reshape(-1)
         events['sub'].append(iSub)
         events['condition'].append(iCond)
         events['PDR'].append(tmp_y.tolist())
   
 plt.figure()
-time_min = 0.2
+time_min = 0.3
 time_max = 4
 dat['min'] = []
 dat['events'] = []
@@ -256,7 +314,7 @@ for iSub in np.unique(dat['sub']):
      # find inflection point
      xv = np.diff(np.r_[0, indices])
      
-     indices = indices[xv > 100]
+     indices = indices[xv > 5]
      
      if np.diff(tmp_p[indices].reshape(-1))[0] < 0:
          indices = indices[1:]
@@ -303,12 +361,15 @@ print('The MPCL was = ' + str(round(np.mean(np.array(dat['min'])),3)) +
 # del dat['gazeX'], dat['gazeY']
 del dat['numOfTrial'], dat['numOfBlink'],dat['numOfSaccade'],dat['ampOfSaccade']
 
+#%% MS -------------------------------------------
 dat['ampOfMS'] = []
 dat['sTimeOfMS'] = []
 ms_events = []
 for iSub in np.unique(dat['sub']):
     ind = np.argwhere(np.array(dat['sub'])==np.int64(iSub)).reshape(-1)
-    ev,ms,fs = makeMicroSaccade(cfg,np.array(dat['gazeX'])[ind,:],np.array(dat['gazeY'])[ind,:])
+    x = [g for i,g in enumerate(dat['gazeX']) if i in ind]
+    y = [g for i,g in enumerate(dat['gazeY']) if i in ind]
+    ev,ms,fs = makeMicroSaccade(cfg,x,y)
     dat['ampOfMS'] = dat['ampOfMS'] + ms['ampOfMS']
     dat['sTimeOfMS'] = dat['sTimeOfMS'] + ms['sTimeOfMS']
     ms_events = ms_events+ev
@@ -325,6 +386,7 @@ for iSub in np.unique(dat['sub']):
 # gazeX_p = np.mean(gazeX-center[0],axis=1)
 # gazeY_p = np.mean(gazeY-center[1],axis=1)
 
+#%% gaze xy -------------------------------------------
 
 gazeX = []
 gazeY = []
@@ -370,5 +432,5 @@ dat['gazeY'] = gazeY_p.tolist()
 #     # np.corrcoef(ms_events[tNum][3][-3],ms_events[tNum][4][-3])[0][1]
 #     plt.title(str(d[1])+'_'+d[0])
 
-with open(os.path.join("./data/data20211124.json"),"w") as f:
+with open(os.path.join("./data/data20211124_f.json"),"w") as f:
         json.dump(dat,f)
