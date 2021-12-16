@@ -511,14 +511,28 @@ print(p4)
 
 
 ## Results
-We observed pupillary responses during the glare illusion or halo stimuli presented at one out of five VF locations (i.e., upper, lower, left, right, and center) as shown in Fig.2A. As reported previously [22,46–48], we confirmed that averaged pupillary response was significantly constricted by the glare illusion in the center condition 
+We observed pupillary responses during the glare illusion or halo stimuli presented at one out of five VF locations (i.e., upper, lower, left, right, and center), as shown in Fig.2A. As reported previously [22,46–48], we confirmed that the averaged pupil size from 0s to 4s was significantly constricted by the glare illusion in the center condition 
 ($t$(`r anovaTabAll[["center_table"]][["anovaTab"]][["parameter"]][["df"]]`) = 
 `r round(anovaTabAll[["center_table"]][["anovaTab"]][["statistic"]][["t"]],3)`, 
 $p$ = `r round(anovaTabAll[["center_table"]][["anovaTab"]][["p.value"]],3)`, 
 Cohen’s  $d_z$ = `r anovaTabAll[["center_table"]][["cohend"]]`, 
 $BF_{10}$ =  `r anovaTabAll[["center_table"]][["bf"]]`)
 
-We first determined the MPCL (mean = `r round(mean(events_data[events_data$tag=='min',]$events),3)`s, S.D. = `r round(sd(events_data[events_data$tag=='min',]$events),3)`s) to calculate the early and late components of pupillary response (see Method and Supplementary Fig. 1). In the early component for the periphery condition __(Fig. 3B)__, the two-way repeated measures ANOVA revealed a significant main effect on the pattern and VF locations 
+We first determined the MPCL (mean = 
+`r round(mean(events_data[events_data$tag=='min',]$events),3)`s, S.D. = `r round(sd(events_data[events_data$tag=='min',]$events),3)`s) 
+to calculate the early and late components of pupillary response (see Method and Supplementary Fig. 1). For the center condition, there was significant differences of early and late components of pupil response between glare and halo stimulus (Fig. 3A) 
+($t$(`r anovaTabAll[["center_early_table"]][["anovaTab"]][["parameter"]][["df"]]`) = 
+`r round(anovaTabAll[["center_early_table"]][["anovaTab"]][["statistic"]][["t"]],3)`, 
+$p$ = `r round(anovaTabAll[["center_early_table"]][["anovaTab"]][["p.value"]],3)`, 
+Cohen’s  $d_z$ = `r anovaTabAll[["center_early_table"]][["cohend"]]`, 
+$BF_{10}$ =  `r anovaTabAll[["center_early_table"]][["bf"]]`;
+$t$(`r anovaTabAll[["center_late_table"]][["anovaTab"]][["parameter"]][["df"]]`) = 
+`r round(anovaTabAll[["center_late_table"]][["anovaTab"]][["statistic"]][["t"]],3)`, 
+$p$ = `r round(anovaTabAll[["center_late_table"]][["anovaTab"]][["p.value"]],3)`, 
+Cohen’s  $d_z$ = `r anovaTabAll[["center_late_table"]][["cohend"]]`, 
+$BF_{10}$ =  `r anovaTabAll[["center_late_table"]][["bf"]]`).
+
+In the early component for the periphery condition (Fig. 3B), a two-way repeated measures ANOVA revealed a significant main effect on the pattern and VF locations
 ($F$(`r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][4,]['df.col'],3)`, 
 `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][5,]['df.col'],3)`) = 
 `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][4,]['f.col'],3)`, 
@@ -531,20 +545,15 @@ $F$(`r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][2,]['df.col'],3)`,
 p = `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][2,]['p.col'],3)`, 
 $\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][2,]['p.eta^2'],3)`, 
 $BF_{10}$ =  `r anovaTabAll[["data_anova_Early"]][["bf"]][1]`). 
-However, the post-hoc multiple comparisons for the VF locations showed that any pair of VF location did not reach the significance level (p > 0.05). In addition, there was no significant interaction between the pattern and VF locations 
+However, the post-hoc multiple comparisons for the VF locations showed that any pairs of VF location did not reach the significance level (p > 0.05). In addition, there was no significant interaction between the pattern and VF locations 
 ($F$(`r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][6,]['df.col'],3)`, 
 `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][7,]['df.col'],3)`) = 
 `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][6,]['f.col'],3)`, 
 p = `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][6,]['p.col'],3)`, 
 $\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Early"]][["anovaTab"]][6,]['p.eta^2'],3)`, 
 $BF_{10}$ =  `r  round(anovaTabAll[["data_anova_Early"]][["bf"]][4]/anovaTabAll[["data_anova_Early"]][["bf"]][3],3)`).
-For the center condition, there is significant differences of averaged pupil response between glare and halo stimulus 
-($t$(`r anovaTabAll[["center_early_table"]][["anovaTab"]][["parameter"]][["df"]]`) = 
-`r round(anovaTabAll[["center_early_table"]][["anovaTab"]][["statistic"]][["t"]],3)`, 
-$p$ = `r round(anovaTabAll[["center_early_table"]][["anovaTab"]][["p.value"]],3)`, 
-Cohen’s  $d_z$ = `r anovaTabAll[["center_early_table"]][["cohend"]]`, 
-$BF_{10}$ =  `r anovaTabAll[["center_early_table"]][["bf"]]`)
-In the late component (the AUC) for the periphery condition, the two-way repeated measures ANOVA revealed a significant main effect on the VF location and interaction 
+
+In the late component (the AUC) for the periphery condition, a two-way repeated measures ANOVA revealed a significant main effect on the VF location and pattern x VF interaction 
 ($F$(`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['df.col'],3)`, 
 `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][3,]['df.col'],3)`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['f.col'],3)`, 
@@ -557,19 +566,7 @@ $F$(`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][6,]['df.col'],3)`,
 p = `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][6,]['p.col'],3)`, 
 $\eta^2_p$ =  `r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][6,]['p.eta^2'],3)`, 
 $BF_{10}$ =  `r  round(anovaTabAll[["data_anova_Late"]][["bf"]][4]/anovaTabAll[["data_anova_Late"]][["bf"]][3],3)`).
-The post-hoc multiple comparisons for the VFs showed that the UVF produces larger pupil dilation than the left and lower VFs 
-($t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['df']`) = 
-`r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['t'],3)`, 
-$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['adj.p'],3)` for upper vs. left; 
-$t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][2,]['df']`) = 
-`r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][2,]['t'],3)`, 
-$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][2,]['adj.p'],3)` for upper vs. lower; 
-$t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][4,]['df']`) = 
-`r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][4,]['t'],3)`, 
-$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][4,]['adj.p'],3)` for upper vs. right
-)
-in line with the previous studies __[13,15,17,18]__. 
-Importantly, the post-hoc multiple comparisons for the interaction showed that the significant differences in pupil response between the glare and halo stimuli in the UVF 
+Most importantly, the post-hoc multiple comparisons for the interaction showed that the AUC for the glare illusion was significantly smaller than that in halo stimuli in the UVF
 ($t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][6,]['df.col']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][5,]['f.col'],3)`, 
 $p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][5,]['p.col'],3)`, 
@@ -591,7 +588,25 @@ $t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][12,]['df.col']`) =
 $p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][11,]['p.col'],3)`, 
 $\eta^2_p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][11,]['p.eta^2'],3)` 
 $BF_{10}$ = `r anovaTabAll[["data_anova_Late"]][["bf_inter"]][4,]` for Right). 
-The post-hoc multiple comparisons for the VF location for the halo stimulus showed that the UVF in the halo stimulus produces larger pupil dilation than the left, right and lower VFs
+Since the AUC was defined as integral value (see Method) from the PLR to stimulus offset, the smaller AUC indicates the slow recovery of pupil dilation toward the baseline pupil size. The following multiple comparisons for the VFs showed that the UVF produces the larger AUC than the left and Right VFs 
+($t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['df']`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['t'],3)`, 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][1,]['adj.p'],3)` for upper vs. left; 
+$t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][2,]['df']`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][2,]['t'],3)`, 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][2,]['adj.p'],3)` for upper vs. lower; 
+$t$(`r anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][4,]['df']`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][4,]['t'],3)`, 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_ttest"]][4,]['adj.p'],3)` for upper vs. right
+)
+, in line with the previous studies __[13,15,17,18]__. 
+We also found a significant VF location effect on the AUC for the halo stimulus 
+($F$(`r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][3,]['df.col'],3)`,
+`r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][4,]['df.col'],3)`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][3,]['f.col'],3)`, 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][3,]['p.col'],3)`, 
+$\eta^2_p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3b_inter"]][3,]['p.eta^2'],3)`) 
+The post-hoc multiple comparisons for the VF location for the halo stimulus showed that the UVF produces the larger AUC than the left, right and lower VFs 
 ($t$(`r anovaTabAll[["data_anova_Late"]][["postContLocs"]][1,]['df']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][1,]['t'],3)`, 
 $p$ = `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][1,]['adj.p'],3)` for upper vs. left; 
@@ -602,13 +617,6 @@ $t$(`r anovaTabAll[["data_anova_Late"]][["postContLocs"]][3,]['df']`) =
 `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][3,]['t'],3)`, 
 $p$ = `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][3,]['adj.p'],3)` for upper vs. lower;)
 
-
-For the Center condition, the AUC was significantly reduced by the glare illusion
-($t$(`r anovaTabAll[["center_late_table"]][["anovaTab"]][["parameter"]][["df"]]`) = 
-`r round(anovaTabAll[["center_late_table"]][["anovaTab"]][["statistic"]][["t"]],3)`, 
-$p$ = `r round(anovaTabAll[["center_late_table"]][["anovaTab"]][["p.value"]],3)`, 
-Cohen’s  $d_z$ = `r anovaTabAll[["center_late_table"]][["cohend"]]`, 
-$BF_{10}$ =  `r anovaTabAll[["center_late_table"]][["bf"]]`)
 
 <!-- There was no significant main effect on the pattern   -->
 <!-- ($F$(`r round(anovaTabAll[["data_anova_Late"]][["anovaTab"]][2,]['df.col'],3)`,  -->

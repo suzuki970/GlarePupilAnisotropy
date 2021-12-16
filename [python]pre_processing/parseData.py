@@ -84,10 +84,10 @@ for iSub,subName in enumerate(folderName):
                             
             event_data[mm].append(tmp)
             
-    for iTrial in zip(event_data['EFIX'],events_onset):
+    for iTrial,t_onset in zip(event_data['EFIX'],events_onset):
         for e in iTrial:
-            e[0] = int(e[0])-initialTimeVal
-            e[1] = int(e[1])-initialTimeVal
+            e[0] = (int(e[0])-initialTimeVal)*coef-t_onset[0]
+            e[1] = (int(e[1])-initialTimeVal)*coef-t_onset[0]
     
     event_data['numOfEBLINK'] = [len(e) for e in event_data['EBLINK']]   
     event_data['numOfESACC'] = [len(e) for e in event_data['ESACC']]
