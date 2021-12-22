@@ -14,8 +14,8 @@ params:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r read function, child="readFunc.Rmd"}
-```
+<!-- ```{r read function, child="readFunc.Rmd"} -->
+<!-- ``` -->
 
 
 ## Article information
@@ -55,6 +55,37 @@ anovaTabAll = list()
 
 # Figure 2A -----------------------------------------------------------------
 data_e1_ave = aggregate( data_y ~ data_x*Locs*Pattern, data = data_e1, FUN = "mean")
+
+timeCourseBF = data.frame()
+for(iLocs in unique(data_e1$Locs)[3]){
+  for(ix in unique(data_e1$data_x)[1000]){
+    tmp = data_e1[data_e1$data_x == ix &
+                    data_e1$Locs == iLocs,]
+    
+    x = tmp[tmp$Pattern == 'Glare',]$data_y
+    y = tmp[tmp$Pattern == 'Control',]$data_y
+    
+    f = data.frame(
+      sub = subName[1:length(x)],
+      glare = x,
+      control = y
+    )
+    write.csv(f, "./data/test.csv")
+    
+    bf = ttestBF(x = x, y = y, paired=TRUE)
+    
+    timeCourseBF = rbind(timeCourseBF,data.frame(
+      data_x = ix,
+      Locs = iLocs,
+      bf = exp(bf@bayesFactor[["bf"]])
+    ))
+  }
+}
+
+# timeCourseBF$data_y = timeCourseBF$bf
+# config$lim_y = c(0, 5)
+# p <- disp(timeCourseBF,config,0,c("Locs"))+
+#   facet_grid(. ~ Locs)
 
 config = list(lim_x = c(sTime, eTime),
               lim_y = c(-0.5, 0.7),

@@ -19,31 +19,40 @@ warnings.simplefilter('ignore')
 
 #%% ###  initial settings ###################
 cfg={
-'SAMPLING_RATE':500,   
-'center':[1920, 1080],  
-'DOT_PITCH':0.369,   
-'VISUAL_DISTANCE':80,   
-'acceptMSRange':2.81,
-# 'acceptMSRange':3,
-'windowL':10,
-'TIME_START':-1,
-'TIME_END':4,
-'WID_ANALYSIS':4,
-'WID_BASELINE':np.array([-0.2,0]),
-'WID_FILTER':np.array([]),
-'METHOD':1, #subtraction
-'FLAG_LOWPASS':False,
-'THRES_DIFF':0.04
+    'SAMPLING_RATE':500,   
+    'center':[1920, 1080],  
+    'DOT_PITCH':0.369,   
+    'VISUAL_DISTANCE':80,   
+    'acceptMSRange':2.81,
+    # 'acceptMSRange':3,
+    'windowL':10,
+    'TIME_START':-1,
+    'TIME_END':4,
+    'WID_ANALYSIS':4,
+    'WID_BASELINE':np.array([-0.2,0]),
+    'WID_FILTER':np.array([]),
+    'METHOD':1, #subtraction
+    'FLAG_LOWPASS':False,
+    'mmFlag':False,
+    'normFlag':True
 }
 
 saveFileLocs = './data/'
 
-f = open(os.path.join(str('./data/data_original.json')))
+if cfg['mmFlag']:
+    f = open(os.path.join(str('./data/data_original_mm.json')))
+    cfg['THRES_DIFF'] = 0.01
+    
+else:
+    f = open(os.path.join(str('./data/data_original.json')))
+    cfg['THRES_DIFF'] = 0.04
+    
 dat = json.load(f)
 f.close()
 
 mmName = list(dat.keys())
 
+# plt.plot(np.diff(np.array(dat['PDR'])).T)
 # v = np.diff(np.array(dat['PDR'])).reshape(-1)
 # plt.hist(v,bins=100)
 # sigma = np.nanstd(v)
@@ -431,6 +440,10 @@ dat['gazeY'] = gazeY_p.tolist()
 #     plt.plot(d[-3],d[-2])
 #     # np.corrcoef(ms_events[tNum][3][-3],ms_events[tNum][4][-3])[0][1]
 #     plt.title(str(d[1])+'_'+d[0])
+if cfg['mmFlag']:
+   with open(os.path.join("./data/data20211124_mm.json"),"w") as f:
+        json.dump(dat,f)
 
-with open(os.path.join("./data/data20211124_f.json"),"w") as f:
+else:
+    with open(os.path.join("./data/data20211124_f.json"),"w") as f:
         json.dump(dat,f)

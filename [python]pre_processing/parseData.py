@@ -127,6 +127,10 @@ for mm in mmName:
     if not isinstance(datHash[mm],list):
         datHash[mm] = datHash[mm].tolist()
         
-with open(os.path.join(saveFileLocs + "data_original.json"),"w") as f:
-    json.dump(datHash,f)
+if cfg['mmFlag']:
+    with open(os.path.join(saveFileLocs + "data_original_mm.json"),"w") as f:
+        json.dump(datHash,f)
+else:
+    with open(os.path.join(saveFileLocs + "data_original.json"),"w") as f:
+        json.dump(datHash,f)
        
