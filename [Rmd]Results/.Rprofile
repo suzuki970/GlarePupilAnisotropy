@@ -10,6 +10,7 @@ library(reshape)
 library(quickpsy)
 library(RColorBrewer)
 library(zoo)
+library(knitr)
 
 if(exists(".anovakun.env")){
   sys.source("./data/anovakun_485.R", envir = .anovakun.env)
