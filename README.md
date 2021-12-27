@@ -6,7 +6,7 @@ Istiqomah, N., Suzuki, Y., Kinzuka, Y., Minami, T. & Nakauchi, S. Pupil response
 
 ## Requirements
 Python
-- pre-peocessing (https://github.com/suzuki970/PupilAnalysisToolbox)
+- pre-processing (https://github.com/suzuki970/PupilAnalysisToolbox)
 - numpy
 - scipy
 - os
