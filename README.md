@@ -1,4 +1,4 @@
-# Experimental data for *"Pupil response anisotropy of the peripheral visual field by the glare illusion"*
+# Experimental data for *"Anisotropy in the peripheral visual field based on pupil response to the glare illusion"*
 Copyright 2021 Yuta Suzuki
 
 ### Article information
