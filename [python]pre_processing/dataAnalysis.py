@@ -24,7 +24,7 @@ cfg={
     'DOT_PITCH':0.369,   
     'VISUAL_DISTANCE':80,   
     'acceptMSRange':2.81,
-    # 'acceptMSRange':3,
+    # 'acceptMSRange':10,
     'windowL':10,
     'TIME_START':-1,
     'TIME_END':4,
@@ -209,8 +209,8 @@ ax.add_patch(e)
 plt.plot(gazeX,gazeY,'.')
 plt.plot(gazeX[rejectGaze],gazeY[rejectGaze],'r.')
 plt.axis('equal')
-plt.xlim([-rangeWin-20,rangeWin+20])
-plt.ylim([-rangeWin-20,rangeWin+20])
+# plt.xlim([-rangeWin-20,rangeWin+20])
+# plt.ylim([-rangeWin-20,rangeWin+20])
 
 rejectGaze2 = np.argwhere(np.isnan(gazeX)).reshape(-1)
 rejectGaze = np.unique(np.r_[rejectGaze,rejectGaze2])
@@ -367,36 +367,15 @@ print('The MPCL was = ' + str(round(np.mean(np.array(dat['min'])),3)) +
                  
 # plt.legend(loc='lower right')
 
-# del dat['gazeX'], dat['gazeY']
-del dat['numOfTrial'], dat['numOfBlink'],dat['numOfSaccade'],dat['ampOfSaccade']
 
 #%% MS -------------------------------------------
-dat['ampOfMS'] = []
-dat['sTimeOfMS'] = []
-ms_events = []
-for iSub in np.unique(dat['sub']):
-    ind = np.argwhere(np.array(dat['sub'])==np.int64(iSub)).reshape(-1)
-    x = [g for i,g in enumerate(dat['gazeX']) if i in ind]
-    y = [g for i,g in enumerate(dat['gazeY']) if i in ind]
-    ev,ms,fs = makeMicroSaccade(cfg,x,y)
-    dat['ampOfMS'] = dat['ampOfMS'] + ms['ampOfMS']
-    dat['sTimeOfMS'] = dat['sTimeOfMS'] + ms['sTimeOfMS']
-    ms_events = ms_events+ev
+ev,ms,fs = makeMicroSaccade(cfg,dat['gazeX'],dat['gazeY'])
 
-# dat['ampOfMS'] = moving_avg(np.array(dat['ampOfMS']).copy(),fs)
-# dat['ampOfMS'] = re_sampling(dat['ampOfMS'] ,(cfg['TIME_END']-cfg['TIME_START'])*int(fs/5)).tolist()
+for mmName in ['ampOfMS','sTimeOfMS','thetaOfMS','MSonset']:
+    dat[mmName] = ms[mmName]
 
-# gazeX = moving_avg(np.array(dat['gazeX']).copy(),cfg['SAMPLING_RATE'])
-# gazeX = re_sampling(gazeX,(cfg['TIME_END']-cfg['TIME_START'])*100)
-
-# gazeY = moving_avg(np.array(dat['gazeY']).copy(),cfg['SAMPLING_RATE'])
-# gazeY = re_sampling(gazeY,(cfg['TIME_END']-cfg['TIME_START'])*100)
-
-# gazeX_p = np.mean(gazeX-center[0],axis=1)
-# gazeY_p = np.mean(gazeY-center[1],axis=1)
 
 #%% gaze xy -------------------------------------------
-
 gazeX = []
 gazeY = []
 for fixTrial in dat['endFix']:
@@ -416,6 +395,7 @@ gazeY_p = pixel2angle(cfg['DOT_PITCH'],gazeY_p.tolist(),cfg['VISUAL_DISTANCE'])
 dat['gazeX'] = gazeX_p.tolist()
 dat['gazeY'] = gazeY_p.tolist()
 
+#%% plot -------------------------------------------
 # plt.figure()
 # p = np.array(dat['ampOfMS']).mean(axis=0)
 # plt.plot(p)
@@ -440,10 +420,13 @@ dat['gazeY'] = gazeY_p.tolist()
 #     plt.plot(d[-3],d[-2])
 #     # np.corrcoef(ms_events[tNum][3][-3],ms_events[tNum][4][-3])[0][1]
 #     plt.title(str(d[1])+'_'+d[0])
+
+del dat['numOfTrial'], dat['numOfBlink'],dat['numOfSaccade'],dat['ampOfSaccade']
+
 if cfg['mmFlag']:
-   with open(os.path.join("./data/data20211124_mm.json"),"w") as f:
+    with open(os.path.join("./data/data20211227_mm.json"),"w") as f:
         json.dump(dat,f)
 
 else:
-    with open(os.path.join("./data/data20211124_f.json"),"w") as f:
+    with open(os.path.join("./data/data20211227.json"),"w") as f:
         json.dump(dat,f)

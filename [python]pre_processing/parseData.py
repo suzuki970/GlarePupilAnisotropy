@@ -12,6 +12,7 @@ datHash={"PDR":[],
          "gazeY":[],
          "sub":[],
          "numOfTrial":[],
+         "MS":[],
          "numOfBlink":[],
          "numOfSaccade":[],
          "ampOfSaccade":[],
@@ -59,7 +60,7 @@ for iSub,subName in enumerate(folderName):
     pupilData = eyeData['pupilData']
     gazeX = eyeData['gazeX']
     gazeY = eyeData['gazeY']
-    mSaccade = eyeData['mSaccade']
+    mSaccade = eyeData['MS']
     
     coef = fs / 1000
     
@@ -118,7 +119,9 @@ for iSub,subName in enumerate(folderName):
     datHash['numOfSaccade'] = np.r_[datHash['numOfSaccade'], np.array(event_data['numOfESACC'])]
     datHash['ampOfSaccade'] = np.r_[datHash['ampOfSaccade'], np.array(event_data['ampOfESACC'])]
     
-datHash['PDR'] = re_sampling(datHash['PDR'],cfg['TIME']*fs)
+    datHash['MS'] = datHash['MS']+mSaccade
+    
+datHash['PDR']   = re_sampling(datHash['PDR'],cfg['TIME']*fs)
 datHash['gazeX'] = re_sampling(datHash['gazeX'],cfg['TIME']*fs)
 datHash['gazeY'] = re_sampling(datHash['gazeY'],cfg['TIME']*fs)
 

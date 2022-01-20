@@ -535,6 +535,8 @@ print(p4)
 # print(p2)
 # dev.off()
 ```
+
+## Table 1
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, results='asis'}
 
 cName = c("data_anova_Early","data_anova_Late")
