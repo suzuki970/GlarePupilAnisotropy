@@ -1,8 +1,8 @@
 # Experimental data for *"Anisotropy in the peripheral visual field based on pupil response to the glare illusion"*
-Copyright 2021 Yuta Suzuki
+Copyright 2022 Yuta Suzuki
 
 ### Article information
-Istiqomah, N., Suzuki, Y., Kinzuka, Y., Minami, T. & Nakauchi, S. Pupil response anisotropy of the peripheral visual field by the glare illusion. in prep.
+Istiqomah, N., Suzuki, Y., Kinzuka, Y., Minami, T. & Nakauchi, S. Anisotropy in the peripheral visual field based on pupil response to the glare illusion. Heliyon e09772 (2022) <doi:10.1016/j.heliyon.2022.e09772>.
 
 ## Requirements
 Python
