@@ -42,4 +42,4 @@ raw data can be found at **'[Python]PreProcessing/results'**
 
 
 ## Figure and statistics
-- *‘figure.Rmd’* is to generate figures and statistical results.
+-  **'[Rmd]Results/figure.Rmd'**‘ is to generate figures and statistical results.
