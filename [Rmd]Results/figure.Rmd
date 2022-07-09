@@ -4,10 +4,11 @@ author: "Yuta Suzuki"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
   word_document
+    # reference_docx: doc_templete.docx
   # slidy_presentation:
   #   css: style.css
 params:
-  year: 2021
+  year: 2022
 ---
 
 ```{r setup, include=FALSE}
@@ -48,7 +49,9 @@ sTime = -0.2
 eTime = max(data_e1$data_x)
 
 anovaTabAll = list()
+```
 
+```{r, message=FALSE, warning=FALSE, echo=FALSE, include=FALSE}
 # Figure 2A -----------------------------------------------------------------
 data_e1_ave = aggregate( data_y ~ data_x*Locs*Pattern, data = data_e1, FUN = "mean")
 
@@ -117,25 +120,51 @@ p = p +
 eval(parse(text=paste("p", countFigNum ,"=p", sep="")))
 countFigNum = countFigNum+1
 
-# Supplementary Figure 1A (Center) -----------------------------------------------------------------
+# Figure 3-2 (center) -----------------------------------------------------------------
 data_e1_center = data_e1[data_e1$data_x >= 0 & data_e1$Locs == 'Center',]
 data_e1_center = aggregate( data_y ~ sub*data_x*Pattern, data = data_e1_center, FUN = "mean")
 data_e1_center = aggregate( data_y ~ sub*Pattern, data = data_e1_center, FUN = "mean")
 
 x = data_e1_center[data_e1_center$Pattern == 'Glare',]$data_y
 y = data_e1_center[data_e1_center$Pattern == 'Control',]$data_y
+n = length(x)
 
-cohen_d = cohen.d(x,y,paired=TRUE, within=TRUE)
+# cohen_d = cohen.d(x,y,paired=TRUE, within=TRUE)
+res_ttest = t.test(x, y,var.equal=T, paired=TRUE)
+
 bf = ttestBF(x = x, y = y, paired=TRUE)
 
 center_table = list(list(
   anovaTab = t.test(x,y,var.equal=T,paired=T),
-  cohend = round(abs(cohen_d[["estimate"]]),3),
+  cohend = abs(round(res_ttest[["statistic"]][["t"]] / sqrt(n),3)),
   bf = round(exp(bf@bayesFactor[["bf"]]),3)
 ))
 names(center_table) <- c('center_table')
 
 anovaTabAll = c(anovaTabAll,center_table)
+
+# Figure 3-2 (periphery) -----------------------------------------------------------------
+data_e1_periphery = data_e1[data_e1$data_x >= 0 & data_e1$Locs != 'Center',]
+data_e1_periphery = aggregate( data_y ~ sub*data_x*Pattern*Locs, data = data_e1_periphery, FUN = "mean")
+data_e1_periphery = aggregate( data_y ~ sub*Pattern*Locs, data = data_e1_periphery, FUN = "mean")
+
+data_e1_periphery$Locs = factor(data_e1_periphery$Locs,levels = unique(data_e1_periphery$Locs))
+data_e1_periphery$Pattern = factor(data_e1_periphery$Pattern,levels = unique(data_e1_periphery$Pattern))
+data_e1_periphery$sub = factor(data_e1_periphery$sub,levels = unique(data_e1_periphery$sub))
+
+anovakun(data_e1_periphery,"sAB",long=T, peta=T, gg=T)
+
+p = dispLineGraph(data_e1_periphery,config,c("Locs","Pattern"))
+data_anova_periphery = anovaBF(data_y ~ Locs*Pattern + sub, data=data_e1_periphery, whichRandom = "sub")
+
+periphery_table = list(list(
+ anovaTab = forDrawingSigANOVA,
+  # post = forDrawingPost[["A"]][["bontab"]],
+  bf = round(exp(data_anova_periphery@bayesFactor[["bf"]]),3)
+))
+names(periphery_table) <- c('periphery_table')
+
+anovaTabAll = c(anovaTabAll,periphery_table)
 
 # MPCL -----------------------------------------------------------------
 data_MPCL = aggregate( data_y ~ sub*data_x, data = data_e1, FUN = "mean")
@@ -305,13 +334,15 @@ config = list(
 tmp = data_center[data_center$comp == 'Early',]
 x = tmp[tmp$Pattern == 'Glare',]$data_y
 y = tmp[tmp$Pattern == 'Control',]$data_y
+n = length(x)
 
+res_ttest = t.test(x, y,var.equal=T, paired=TRUE)
 cohen_d = cohen.d(x,y,paired=TRUE, within=TRUE)
 bf = ttestBF(x = x, y = y, paired=TRUE)
 
 center_early_table = list(list(
   anovaTab = t.test(x,y,var.equal=T,paired=T),
-  cohend = round(abs(cohen_d[["estimate"]]),3),
+  cohend = abs(round(res_ttest[["statistic"]][["t"]] / sqrt(n),3)),
   bf = round(exp(bf@bayesFactor[["bf"]]),3)
 ))
 names(center_early_table) <- c('center_early_table')
@@ -347,13 +378,16 @@ countFigNum = countFigNum+1
 tmp = data_center[data_center$comp == 'Late',]
 x = tmp[tmp$Pattern == 'Glare',]$data_y
 y = tmp[tmp$Pattern == 'Control',]$data_y
+n = length(x)
+
+res_ttest = t.test(x, y,var.equal=T, paired=TRUE)
 
 cohen_d = cohen.d(x,y,paired=TRUE, within=TRUE)
 bf = ttestBF(x = x, y = y, paired=TRUE)
 
 center_late_table = list(list(
   anovaTab = t.test(x,y,var.equal=T,paired=T),
-  cohend = round(abs(cohen_d[["estimate"]]),3),
+  cohend = abs(round(res_ttest[["statistic"]][["t"]] / sqrt(n),3)),
   bf = round(exp(bf@bayesFactor[["bf"]]),3)
 ))
 names(center_late_table) <- c('center_late_table')
@@ -495,6 +529,7 @@ for(nameLocs in c("Upper","Lower","Left","Right")){
 }
 
 data_anova_Late = list(list(
+  n = length(x),
   anovaTab = forDrawingSigANOVA,
   post = forDrawingPost[["A"]][["bontab"]],
   postContLocs = forDrawingPost[["A:B"]][["sim.multresults"]][[1]][["bontab"]],
@@ -543,12 +578,12 @@ cName = c("data_anova_Early","data_anova_Late")
 tableName = rbind(c("anovaTab","fig3_ttest","fig3_inter"),
                   c("anovaTab","fig3_inter","fig3_ttest"))
 
-cap = rbind(c("ANOVA table for early compornent",
-        "Multiple comparisons for the VF locations",
-        "Multiple comparisons for the interaction"),
-        c("ANOVA table for Late compornent",
-        "Multiple comparisons for the interaction",
-        "Multiple comparisons for the interaction"))
+cap = rbind(c("Table 1. Main effects of ANOVA in the early component",
+        "Table 2. Multiple comparisons for the VF locations in the early component",
+        "Table 3. Multiple comparisons for the interaction in the early component"),
+        c("Table 4. Main effects of ANOVA in the late component",
+        "Table 5. Multiple comparisons for the VF locations in the late component",
+        "Table 6. Multiple comparisons for the interaction in the late component"))
 
 for(c in seq_along(cName)){
   for(t in seq_along(tableName[c,])){
@@ -568,9 +603,10 @@ for(c in seq_along(cName)){
       d$ms.col = NULL
       colnames(d) = c("factor","df","F","p","sig","p.eta^2")
     }else{
+      d$cohend = d$t / sqrt(d$df[1]+1)
       d$difference = NULL
       rownames(d) = 1:dim(d)[1]
-      colnames(d) = c("pair","t","df","p","adj.p","sig")
+      colnames(d) = c("pair","t","df","p","adj.p","sig","cohen's d_z")
     }
     
     print(kable(d, format = "markdown", digits = 3, row.names = NA,
@@ -583,11 +619,32 @@ for(c in seq_along(cName)){
 
 ## Results
 We observed pupillary responses during the glare illusion or halo stimuli presented at one out of five VF locations (i.e., upper, lower, left, right, and center), as shown in Fig.2A. As reported previously [22,46–48], we confirmed that the averaged pupil size from 0s to 4s was significantly constricted by the glare illusion in the center condition 
-($t$(`r anovaTabAll[["center_table"]][["anovaTab"]][["parameter"]][["df"]]`) = 
-`r round(anovaTabAll[["center_table"]][["anovaTab"]][["statistic"]][["t"]],3)`, 
-$p$ = `r round(anovaTabAll[["center_table"]][["anovaTab"]][["p.value"]],3)`, 
-Cohen’s  $d_z$ = `r anovaTabAll[["center_table"]][["cohend"]]`, 
-$BF_{10}$ =  `r anovaTabAll[["center_table"]][["bf"]]`)
+($t$(`r anovaTabAll$center_table$anovaTab$parameter[["df"]]`) = 
+`r round(anovaTabAll$center_table$anovaTab$statistic,3)`, 
+$p$ = `r round(anovaTabAll$center_table$anovaTab$p.value,3)`, 
+Cohen’s  $d_z$ = `r anovaTabAll$center_table$cohend`, 
+$BF_{10}$ =  `r anovaTabAll[["center_table"]][["bf"]]`). 
+Two-way repeated measures ANOVAs on the pupillary changes in the periphery condition revealed a significant main effect on the pattern 
+($F$(`r round(anovaTabAll$periphery_table$anovaTab[2,]['df.col'],3)`, 
+`r round(anovaTabAll$periphery_table$anovaTab[3,]['df.col'],3)`) = 
+`r round(anovaTabAll$periphery_table$anovaTab[2,]['f.col'],3)`, 
+p = `r round(anovaTabAll$periphery_table$anovaTab[2,]['p.col'],3)`, 
+$\eta^2_p$ =  `r round(anovaTabAll$periphery_table$anovaTab[2,]['p.eta^2'],3)`, 
+$BF_{10}$ =  `r anovaTabAll$periphery_table$bf[1]`). 
+and VF locations 
+($F$(`r round(anovaTabAll$periphery_table$anovaTab[4,]['df.col'],3)`, 
+`r round(anovaTabAll$periphery_table$anovaTab[5,]['df.col'],3)`) = 
+`r round(anovaTabAll$periphery_table$anovaTab[4,]['f.col'],3)`, 
+p = `r round(anovaTabAll$periphery_table$anovaTab[4,]['p.col'],3)`, 
+$\eta^2_p$ =  `r round(anovaTabAll$periphery_table$anovaTab[4,]['p.eta^2'],3)`; 
+$BF_{10}$ =  `r anovaTabAll$periphery_table$bf[2]`). 
+However,there was no significant interaction between the pattern and VF locations 
+($F$(`r round(anovaTabAll$periphery_table$anovaTab[6,]['df.col'],3)`, 
+`r round(anovaTabAll$periphery_table$anovaTab[7,]['df.col'],3)`) = 
+`r round(anovaTabAll$periphery_table$anovaTab[6,]['f.col'],3)`, 
+p = `r round(anovaTabAll$periphery_table$anovaTab[6,]['p.col'],3)`, 
+$\eta^2_p$ =  `r round(anovaTabAll$periphery_table$anovaTab[6,]['p.eta^2'],3)`, 
+$BF_{10}$ =  `r  round(anovaTabAll$periphery_table$bf[4]/anovaTabAll$periphery_table$bf[3],3)`).
 
 We first determined the MPCL (mean = 
 `r round(mean(events_data[events_data$tag=='min',]$events),3)`s, S.D. = `r round(sd(events_data[events_data$tag=='min',]$events),3)`s) 
@@ -662,13 +719,16 @@ $BF_{10}$ = `r anovaTabAll[["data_anova_Late"]][["bf_inter"]][4,]` for Right).
 Since the AUC was defined as integral value (see Method) from the PLR to stimulus offset, the smaller AUC indicates the slow recovery of pupil dilation toward the baseline pupil size. The following multiple comparisons for the VFs showed that the UVF produces the larger AUC than the left and Right VFs 
 ($t$(`r anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][1,]['df']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][1,]['t'],3)`, 
-$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][1,]['adj.p'],3)` for upper vs. left; 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][1,]['adj.p'],3)`,
+Cohen’s $d_z$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][1,]['t']/sqrt(anovaTabAll[["data_anova_Late"]][["n"]]),3)` for upper vs. left; 
 $t$(`r anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][2,]['df']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][2,]['t'],3)`, 
-$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][2,]['adj.p'],3)` for upper vs. lower; 
-$t$(`r anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][4,]['df']`) = 
-`r round(anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][4,]['t'],3)`, 
-$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][4,]['adj.p'],3)` for upper vs. right
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][2,]['adj.p'],3)`,
+Cohen’s $d_z$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][2,]['t']/sqrt(anovaTabAll[["data_anova_Late"]][["n"]]),3)` for upper vs. lower; 
+$t$(`r anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][3,]['df']`) = 
+`r round(anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][3,]['t'],3)`, 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][3,]['adj.p'],3)`,
+Cohen’s $d_z$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3_ttest"]][3,]['t']/sqrt(anovaTabAll[["data_anova_Late"]][["n"]]),3)` for upper vs. right
 )
 , in line with the previous studies __[13,15,17,18]__. 
 We also found a significant VF location effect on the AUC for the halo stimulus 
@@ -680,13 +740,16 @@ $\eta^2_p$ = `r round(anovaTabAll[["data_anova_Late"]][["fig3_inter"]][3,]['p.et
 The post-hoc multiple comparisons for the VF location for the halo stimulus showed that the UVF produces the larger AUC than the left, right and lower VFs 
 ($t$(`r anovaTabAll[["data_anova_Late"]][["postContLocs"]][1,]['df']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][1,]['t'],3)`, 
-$p$ = `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][1,]['adj.p'],3)` for upper vs. left; 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][1,]['adj.p'],3)`,
+Cohen’s $d_z$ = `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][1,]['t']/sqrt(anovaTabAll[["data_anova_Late"]][["n"]]),3)` for upper vs. left; 
 $t$(`r anovaTabAll[["data_anova_Late"]][["postContLocs"]][2,]['df']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][2,]['t'],3)`, 
-$p$ = `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][2,]['adj.p'],3)` for upper vs. right; 
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][2,]['adj.p'],3)`,
+Cohen’s $d_z$ = `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][2,]['t']/sqrt(anovaTabAll[["data_anova_Late"]][["n"]]),3)` for upper vs. right; 
 $t$(`r anovaTabAll[["data_anova_Late"]][["postContLocs"]][3,]['df']`) = 
 `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][3,]['t'],3)`, 
-$p$ = `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][3,]['adj.p'],3)` for upper vs. lower;)
+$p$ = `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][3,]['adj.p'],3)`,
+Cohen’s $d_z$ = `r round(anovaTabAll[["data_anova_Late"]][["postContLocs"]][3,]['t']/sqrt(anovaTabAll[["data_anova_Late"]][["n"]]),3)` for upper vs. lower;)
 
 
 <!-- There was no significant main effect on the pattern   -->
