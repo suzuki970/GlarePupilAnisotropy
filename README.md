@@ -2,7 +2,9 @@
 Copyright 2022 Yuta Suzuki
 
 ### Article information
-Istiqomah, N., Suzuki, Y., Kinzuka, Y., Minami, T. & Nakauchi, S. Anisotropy in the peripheral visual field based on pupil response to the glare illusion. Heliyon e09772 (2022) <doi:10.1016/j.heliyon.2022.e09772>.
+Istiqomah, N., Suzuki, Y., Kinzuka, Y., Minami, T. & Nakauchi, S. Anisotropy in the peripheral visual field based on pupil response to the glare illusion. Heliyon e09772 (2022) [doi:10.1016/j.heliyon.2022.e09772].
+
+[doi:10.1016/j.heliyon.2022.e09772]: https://doi.org/10.1016/j.heliyon.2022.e09772
 
 ## Requirements
 Python
